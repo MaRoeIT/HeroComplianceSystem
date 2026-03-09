@@ -1,0 +1,48 @@
+@using Company.App.Web.Shared
+@using Microsoft.AspNetCore.Components.Routing
+@using MudBlazor
+
+<MudThemeProvider Theme="@_darkTheme" IsDarkMode="true" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <MudText Typo="Typo.h1" Color="Color.Error">404 - Not Found</MudText>
+            <MudText>Sorry, there's nothing at this address.</MudText>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@code {
+    private MudTheme _darkTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#1E88E5",
+            Secondary = "#FFA726",
+            AppbarBackground = "#1E1E1E",
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#90CAF9",
+            Secondary = "#FFB74D",
+            AppbarBackground = "#1E1E1E",
+            Background = "#121212",
+            BackgroundGray = "#1E1E1E",
+            Surface = "#1E1E1E",
+            DrawerBackground = "#1E1E1E",
+            DrawerText = "rgba(255,255,255, 0.87)",
+            DrawerIcon = "rgba(255,255,255, 0.87)",
+            TextPrimary = "rgba(255,255,255, 0.87)",
+            TextSecondary = "rgba(255,255,255, 0.60)",
+        }
+    };
+}

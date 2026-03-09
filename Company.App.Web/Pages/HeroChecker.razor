@@ -1,0 +1,139 @@
+﻿@page "/hero-checker"
+@using Company.App.Application.Shared
+@using Company.App.Application.UseCases.DetectBatman
+@using MediatR
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject IHttpClientFactory ClientFactory
+
+<PageTitle>Hero Checker - Hero Compliance System</PageTitle>
+
+<MudText Typo="Typo.h2" GutterBottom="true">
+    <MudIcon Icon="@Icons.Material.Filled.Security" Class="mr-2" /> Hero Checker
+</MudText>
+<MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-6">Hero Compliance Checker</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="8">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudText Typo="Typo.h6" Class="mb-4">Upload CSV File</MudText>
+
+            <MudFileUpload T="IBrowserFile" Accept=".csv" OnFilesChanged="HandleFileSelected" MaximumFileCount="1">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                               Size="Size.Large"
+                               FullWidth="true">
+                        Select CSV File
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+
+            @if(_isProcessing)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-4" />
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">
+                    <em>🔍 Analyzing CSV for secret identities...</em>
+                </MudText>
+            }
+            else if (_heroResult != null)
+            {
+                <MudAlert Severity="@(_heroResult.Found ? Severity.Error : Severity.Success)" 
+                          Class="mt-4" 
+                          Elevation="2">
+                    <MudText Typo="Typo.h6">@_heroResult.Message</MudText>
+                    @if (_heroResult.Found)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-2">Checked at: @_heroResult.CheckedAt</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mt-2" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Class="mt-2" />
+                    }
+                </MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudText Typo="Typo.h6" GutterBottom="true">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" /> Instructions
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                1. Prepare a CSV file with hero data
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                2. CSV must have "Name" and "Identity" columns
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                3. Click "Select CSV File" to upload
+            </MudText>
+            <MudText Typo="Typo.body2">
+                4. Review the compliance results
+            </MudText>
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                ⚠️ System will flag any Bruce Wayne / Batman entries as compliance violations.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code{
+    private bool _isProcessing = false;
+    private Result<DetectionResult>? _result;
+    private DetectionResult? _heroResult;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        Console.WriteLine($"File selected: {file.Name}, Size: {file.Size} bytes");
+        _isProcessing = true;
+        _result = null;
+        _heroResult = null;
+        StateHasChanged();
+
+        try
+        {
+            var httpClient = ClientFactory.CreateClient("LocalAPI");
+
+            using var content = new MultipartFormDataContent();
+            using var stream = new MemoryStream();
+            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(stream);
+            stream.Position = 0;
+
+            var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+            content.Add(fileContent, "file", e.File.Name);
+            Console.WriteLine($"Uploading file: {e.File.Name}, Size: {e.File.Size} bytes");
+            var response = await httpClient.PostAsync("api/v1/hero/detectBatman", content);
+            Console.WriteLine($"API Response: {response.StatusCode}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                _result = await response.Content.ReadFromJsonAsync<Result<DetectionResult>>();
+            _heroResult = _result?.Value;
+            Console.WriteLine($"Result: Found={_heroResult?.Found}, Message={_heroResult?.Message}");
+        }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error Response: {errorContent}");
+                _result = new Result<DetectionResult>(null, false, $"Error: {response.ReasonPhrase}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception: {ex}");
+            _result = new Result<DetectionResult>(null, false, $"Error: {ex.Message}");
+        }
+
+        _isProcessing = false;
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,42 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Routing
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h5" Class="ml-3">🦸 Hero Compliance System</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.DarkMode" Color="Color.Inherit" />
+    </MudAppBar>
+
+    <MudDrawer Open="_drawerOpen" OpenChanged="DrawerOpenChanged" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Navigation</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/hero-checker" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Security">Hero Checker</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-8 pt-8">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void DrawerOpenChanged(bool value)
+    {
+        _drawerOpen = value;
+    }
+}

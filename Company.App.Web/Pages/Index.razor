@@ -1,0 +1,60 @@
+@page "/"
+
+<PageTitle>Home - Hero Compliance System</PageTitle>
+
+<MudText Typo="Typo.h2" GutterBottom="true">🦸 Welcome to the Hero Compliance System</MudText>
+<MudText Typo="Typo.h5" Color="Color.Secondary" Class="mb-4">Protecting Secret Identities Since 2024</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudPaper Elevation="4" Class="pa-6" Style="height: 100%;">
+            <MudText Typo="Typo.h5" GutterBottom="true">
+                <MudIcon Icon="@Icons.Material.Filled.Security" Class="mr-2" /> What We Do
+            </MudText>
+            <MudText Class="mb-4">
+                Our advanced CSV scanning technology helps maintain the secrecy of superhero identities 
+                by detecting unauthorized presence of certain... well-known vigilantes in your systems.
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Upload your hero roster CSV files and we'll scan them for compliance violations.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudPaper Elevation="4" Class="pa-6" Style="height: 100%;">
+            <MudText Typo="Typo.h5" GutterBottom="true">
+                <MudIcon Icon="@Icons.Material.Filled.Policy" Class="mr-2" /> Why It Matters
+            </MudText>
+            <MudStack Spacing="2" Class="mt-4">
+                <MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="mr-2" />
+                    Prevents Gotham-related incidents
+                </MudText>
+                <MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="mr-2" />
+                    Maintains corporate compliance
+                </MudText>
+                <MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="mr-2" />
+                    Protects against dark knight liability
+                </MudText>
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudPaper Elevation="4" Class="pa-6 d-flex align-center justify-center" Style="min-height: 200px;">
+            <div class="text-center">
+                <MudText Typo="Typo.h4" Class="mb-4">Ready to Check Your Heroes?</MudText>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           Size="Size.Large" 
+                           StartIcon="@Icons.Material.Filled.Upload"
+                           Href="/hero-checker">
+                    Start Hero Checker
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
