@@ -1,6 +1,7 @@
 using Company.App.Application.Interfaces;
 using Company.App.Application.UseCases.DetectBatman;
 using Company.App.Infrastructure.Adapters;
+using Company.App.Web;
 using Microsoft.AspNetCore.Components;
 using MudBlazor.Services;
 
@@ -20,9 +21,10 @@ builder.Services.AddHttpClient("LocalAPI", client =>
     client.BaseAddress = new Uri("https://localhost:7019");
 });
 
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
 builder.Services.AddMudServices();
 
 var app = builder.Build();
@@ -38,8 +40,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthorization();
+
 app.MapControllers();
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+app.MapRazorPages();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+app.UseAntiforgery();
 
 app.Run();
