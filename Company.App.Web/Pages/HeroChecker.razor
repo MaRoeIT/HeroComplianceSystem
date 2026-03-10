@@ -2,11 +2,13 @@
 @rendermode InteractiveServer
 @using Company.App.Application.Shared
 @using Company.App.Application.UseCases.DetectBatman
+@using Company.App.Web.Services
 @using MediatR
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
+@inject HeroCheckHistoryService HistoryService
 
 <PageTitle>Hero Checker - Hero Compliance System</PageTitle>
 
@@ -92,6 +94,7 @@
     private bool _isProcessing = false;
     private Result<DetectionResult>? _result;
     private DetectionResult? _heroResult;
+    private string? _currentFileName;
 
     private async Task OpenFilePicker()
     {
@@ -104,6 +107,7 @@
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         var file = e.File;
+        _currentFileName = file.Name;
         Console.WriteLine($"File selected: {file.Name}, Size: {file.Size} bytes");
         _isProcessing = true;
         _result = null;
@@ -133,6 +137,11 @@
                 _result = await response.Content.ReadFromJsonAsync<Result<DetectionResult>>();
             _heroResult = _result?.Value;
             Console.WriteLine($"Result: Found={_heroResult?.Found}, Message={_heroResult?.Message}");
+
+            if (_heroResult != null && _currentFileName != null)
+            {
+                HistoryService.AddEntry(_heroResult, _currentFileName);
+            }
         }
             else
             {

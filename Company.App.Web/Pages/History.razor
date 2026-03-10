@@ -1,6 +1,120 @@
 ﻿@page "/history"
-<h3>History</h3>
+@rendermode InteractiveServer
+@using Company.App.Web.Services
+@inject HeroCheckHistoryService HistoryService
+@using Company.App.Infrastructure.Adapters
 
-@code {
+<PageTitle>History - Hero Compliance System</PageTitle>
 
+<MudText Typo="Typo.h2" GutterBottom="true">
+    <MudIcon Icon="@Icons.Material.Filled.History" Class="mr-2" /> Check History
+</MudText>
+<MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-6">View all hero compliance check results</MudText>
+
+<MudPaper Elevation="4" Class="pa-6">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h6">Recent Checks (@_history.Count)</MudText>
+        @if (_history.Count > 0)
+        {
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Error" 
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="ClearHistory">
+                Clear History
+            </MudButton>
+        }
+    </div>
+
+
+    @if (_history.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">
+            <MudText Typo="Typo.body1">No checks performed yet. Upload a CSV file in the Hero Checker to get started.</MudText>
+        </MudAlert>
+    }
+    else
+    {
+        <MudTable Items="_history" Hover="true" Striped="true" Dense="true">
+            <HeaderContent>
+                <MudTh>Date & Time</MudTh>
+                <MudTh>File Name</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Message</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date & Time">@context.ProcessedAt.ToLocalTime().ToString("g")</MudTd>
+                <MudTd DataLabel="File Name">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" Class="mr-1" />
+                    @context.FileName
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    @if (context.Result.Found)
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.Warning">
+                            Violation Found
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">
+                            Compliant
+                        </MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Message">@context.Result.Message</MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+<MudPaper>
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Error"
+               StartIcon="@Icons.Material.Filled.Kitesurfing"
+               OnClick="test123">
+        Test
+    </MudButton>
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Error"
+               StartIcon="@Icons.Material.Filled.AddShoppingCart"
+               OnClick="test321">
+        Test2
+    </MudButton>
+</MudPaper>
+
+    @code {
+    private List<HistoryEntry> _history = new();
+
+    protected override void OnInitialized()
+    {
+        LoadHistory();
+    }
+
+    private void LoadHistory()
+    {
+        _history = HistoryService.GetHistory().OrderByDescending(h => h.ProcessedAt).ToList();
+    }
+
+    private void ClearHistory()
+    {
+        HistoryService.ClearHistory();
+        LoadHistory();
+        StateHasChanged();
+    }
+    // Remove this;
+    CsvHistoryReader csvReader = new("C:/Gits/NET/HeroComplianceSystem/fakedb.csv");
+    CsvHistorySave historySave = new("C:/Gits/NET/HeroComplianceSystem/fakedb.csv");
+    public async Task test123()
+    {
+        Console.WriteLine("THis does something");
+        var history = await csvReader.ReadHistoryAsync();
+        foreach (String a in history)
+        {
+            Console.WriteLine(a);
+        }  
+    }
+    public async Task test321()
+    {
+        string teststreng = "hei test";
+        await historySave.SaveHistoryAsync(teststreng);
+    }
 }
