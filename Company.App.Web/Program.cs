@@ -11,11 +11,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Detec
 
 builder.Services.AddScoped<IHeroScanner, CsvHeroScanner>();
 
-builder.Services.AddHttpClient("HeroAPI", (sp, client) =>
-{
-    var nav = sp.GetRequiredService<NavigationManager>();
-    client.BaseAddress = new Uri(nav.BaseUri);
-});
+builder.Services.AddHttpClient("HeroAPI");
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

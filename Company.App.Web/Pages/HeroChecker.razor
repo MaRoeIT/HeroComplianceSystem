@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
 
 <PageTitle>Hero Checker - Hero Compliance System</PageTitle>
 
@@ -19,7 +20,7 @@
         <MudPaper Elevation="4" Class="pa-6">
             <MudText Typo="Typo.h6" Class="mb-4">Upload CSV File</MudText>
 
-            <MudFileUpload T="IBrowserFile" @ref="_fileUpload" Accept=".csv" FilesChanged="HandleFileSelected" MaximumFileCount="1">
+            <MudFileUpload T="IBrowserFile" @ref="_fileUpload" Accept=".csv" OnFilesChanged="HandleFileSelected" MaximumFileCount="1">
                 <ActivatorContent>
                     <MudButton Variant="Variant.Filled"
                                 Color="Color.Primary"
@@ -100,9 +101,9 @@
         }
     }
 
-    private async Task HandleFileSelected(IBrowserFile fileRecieved)
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
-        var file = fileRecieved;
+        var file = e.File;
         Console.WriteLine($"File selected: {file.Name}, Size: {file.Size} bytes");
         _isProcessing = true;
         _result = null;
@@ -121,8 +122,10 @@
             var fileContent = new StreamContent(stream);
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
             content.Add(fileContent, "file", file.Name);
-            Console.WriteLine($"Uploading file: {file.Name}, Size: {file.Size} bytes");
-            var response = await httpClient.PostAsync("api/v1/hero/detectBatman", content);
+
+            var apiUrl = new Uri(Navigation.BaseUri + "api/v1/hero/detectBatman");
+            Console.WriteLine($"Uploading file to: {apiUrl}");
+            var response = await httpClient.PostAsync(apiUrl, content);
             Console.WriteLine($"API Response: {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
