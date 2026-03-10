@@ -11,14 +11,10 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Detec
 
 builder.Services.AddScoped<IHeroScanner, CsvHeroScanner>();
 
-builder.Services.AddScoped(sp =>
+builder.Services.AddHttpClient("HeroAPI", (sp, client) =>
 {
-    var navigationManager = sp.GetRequiredService<NavigationManager>();
-    return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
-});
-builder.Services.AddHttpClient("LocalAPI", client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7019");
+    var nav = sp.GetRequiredService<NavigationManager>();
+    client.BaseAddress = new Uri(nav.BaseUri);
 });
 
 builder.Services.AddRazorComponents()

@@ -1,10 +1,11 @@
 ﻿@page "/hero-checker"
+@rendermode InteractiveServer
 @using Company.App.Application.Shared
 @using Company.App.Application.UseCases.DetectBatman
 @using MediatR
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
-@inject IHttpClientFactory ClientFactory
+@inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Hero Checker - Hero Compliance System</PageTitle>
 
@@ -18,13 +19,14 @@
         <MudPaper Elevation="4" Class="pa-6">
             <MudText Typo="Typo.h6" Class="mb-4">Upload CSV File</MudText>
 
-            <MudFileUpload T="IBrowserFile" Accept=".csv" OnFilesChanged="HandleFileSelected" MaximumFileCount="1">
+            <MudFileUpload T="IBrowserFile" @ref="_fileUpload" Accept=".csv" FilesChanged="HandleFileSelected" MaximumFileCount="1">
                 <ActivatorContent>
                     <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.CloudUpload"
-                               Size="Size.Large"
-                               FullWidth="true">
+                                Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.CloudUpload"
+                                OnClick="OpenFilePicker"
+                                Size="Size.Large"
+                                FullWidth="true">
                         Select CSV File
                     </MudButton>
                 </ActivatorContent>
@@ -85,13 +87,22 @@
 </MudGrid>
 
 @code{
+    private MudFileUpload<IBrowserFile> _fileUpload;
     private bool _isProcessing = false;
     private Result<DetectionResult>? _result;
     private DetectionResult? _heroResult;
 
-    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    private async Task OpenFilePicker()
     {
-        var file = e.File;
+        if (_fileUpload != null)
+        {
+            await _fileUpload.OpenFilePickerAsync();
+        }
+    }
+
+    private async Task HandleFileSelected(IBrowserFile fileRecieved)
+    {
+        var file = fileRecieved;
         Console.WriteLine($"File selected: {file.Name}, Size: {file.Size} bytes");
         _isProcessing = true;
         _result = null;
@@ -100,17 +111,17 @@
 
         try
         {
-            var httpClient = ClientFactory.CreateClient("LocalAPI");
+            var httpClient = HttpClientFactory.CreateClient("HeroAPI");
 
             using var content = new MultipartFormDataContent();
             using var stream = new MemoryStream();
-            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(stream);
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(stream);
             stream.Position = 0;
 
             var fileContent = new StreamContent(stream);
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
-            content.Add(fileContent, "file", e.File.Name);
-            Console.WriteLine($"Uploading file: {e.File.Name}, Size: {e.File.Size} bytes");
+            content.Add(fileContent, "file", file.Name);
+            Console.WriteLine($"Uploading file: {file.Name}, Size: {file.Size} bytes");
             var response = await httpClient.PostAsync("api/v1/hero/detectBatman", content);
             Console.WriteLine($"API Response: {response.StatusCode}");
 
