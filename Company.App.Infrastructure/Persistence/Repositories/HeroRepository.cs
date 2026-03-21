@@ -27,6 +27,21 @@ namespace Company.App.Infrastructure.Persistence.Repositories
             return new Result<HeroByNameResult>(new HeroByNameResult(true,dbHero.Name,dbHero.SecretIdentity,dbHero.LastUpdated),true);
         }
 
+        public async Task<Result<List<HeroByNameResult>>>GetAllHeroesByNameAsync()
+        {
+            List<HeroDbModel>? dbHeroes = await _context.Heroes.ToListAsync<HeroDbModel>();
+            if (dbHeroes == null) return new Result<List<HeroByNameResult>>(null, true);
+
+            List<HeroByNameResult> result = new();
+
+            foreach(var dbHero in dbHeroes)
+            {
+                result.Add(new HeroByNameResult(true, dbHero.Name, dbHero.SecretIdentity, dbHero.LastUpdated));
+            }
+
+            return new Result<List<HeroByNameResult>>(result, true);
+        }
+
         public async Task<Result> AddHeroAsync(HeroDto entity)
         {
             HeroDbModel dbHero = new(entity.Name, entity.Identity);

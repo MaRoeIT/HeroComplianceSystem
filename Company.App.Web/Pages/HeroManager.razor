@@ -140,7 +140,58 @@
     </MudItem>
 </MudGrid>
 
-@code {
+<MudPaper Elevation="4" Class="pa-6 mt-6">
+    <MudText Typo="Typo.h5" GutterBottom="true">
+        <MudIcon Icon="@Icons.Material.Filled.Group" Class="mr-2" /> All Heroes
+    </MudText>
+
+    @if (_isLoadingHeroes)
+    {
+        <MudProgressCircular Indeterminate="true" Class="my-4" />
+        <MudText>Loading heroes...</MudText>
+    }
+    else if (_allHeroesResult != null && _allHeroesResult.IsSuccess && _allHeroesResult.Value?.Count > 0)
+    {
+        <MudGrid Class="mt-4">
+            @foreach (var hero in _allHeroesResult.Value)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Elevation="2">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@hero.Name</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIcon Icon="@Icons.Material.Filled.SupervisedUserCircle" Color="Color.Primary" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2"><strong>Secret Identity:</strong></MudText>
+                            <MudText Typo="Typo.body2" Class="mb-2">@hero.SecretIdentity</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Updated: @hero.LastUpdatedAt.ToString("g")
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    else if (_allHeroesResult?.Value?.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">
+            <MudText>No heroes found in the database. Add some heroes to get started!</MudText>
+        </MudAlert>
+    }
+    else if (_allHeroesResult != null && !_allHeroesResult.IsSuccess)
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">
+            <MudText>Error loading heroes: @_allHeroesResult.Error</MudText>
+        </MudAlert>
+    }
+</MudPaper>
+
+    @code {
     private MudForm? _addForm;
     private MudForm? _searchForm;
 
@@ -150,9 +201,16 @@
 
     private bool _isAdding = false;
     private bool _isSearching = false;
+    private bool _isLoadingHeroes = false;
 
     private Result? _addResult;
     private Result<HeroByNameResult>? _searchResult;
+    private Result<List<HeroByNameResult>>? _allHeroesResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllHeroes();
+    }
 
     private async Task AddHeroAsync()
     {
@@ -196,6 +254,7 @@
         finally
         {
             _isAdding = false;
+            await GetAllHeroes();
         }
     }
 
@@ -231,6 +290,33 @@
         finally
         {
             _isSearching = false;
+        }
+    }
+
+    private async Task GetAllHeroes()
+    {
+        _isLoadingHeroes = true;
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient();
+            var apiUrl = Navigation.ToAbsoluteUri($"/api/v1/hero/heroes").ToString();
+            var response = await httpClient.GetAsync(apiUrl);
+            if(response.IsSuccessStatusCode)
+            {
+                _allHeroesResult = await response.Content.ReadFromJsonAsync<Result<List<HeroByNameResult>>>();
+            }
+            else
+            {
+                _allHeroesResult = new Result<List<HeroByNameResult>>(null, false, $"Server error: {response.StatusCode}");
+            }
+        }
+        catch(Exception ex)
+        {
+            _allHeroesResult = new Result<List<HeroByNameResult>>(null, false, $"Error fetching heroes: {ex.Message}");
+        }
+        finally
+        {
+            _isLoadingHeroes = false;
         }
     }
 }

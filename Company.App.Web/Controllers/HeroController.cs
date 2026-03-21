@@ -2,6 +2,7 @@
 using Company.App.Application.UseCases.AddHero;
 using Company.App.Application.UseCases.DetectBatman;
 using Company.App.Application.UseCases.DetectBatman.Models;
+using Company.App.Application.UseCases.GetAllHeroes;
 using Company.App.Application.UseCases.LookupHeroByName;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -46,7 +47,8 @@ namespace Company.App.Web.Controllers
         [HttpGet("heroes")]
         public async Task<ActionResult<Result<List<HeroByNameResult>>>> GetAllHeroes()
         {
-            throw new NotImplementedException();
+            var result = await _mediator.Send(new GetAllHeroesQuery());
+            return Ok(result);
         }
 
         [HttpGet("heroes/{name}")]

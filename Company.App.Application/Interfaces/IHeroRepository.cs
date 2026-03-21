@@ -11,6 +11,7 @@ namespace Company.App.Application.Interfaces
     public interface IHeroRepository
     {
         Task<Result<HeroByNameResult>>GetHeroByNameAsync(string name);
+        Task<Result<List<HeroByNameResult>>>GetAllHeroesByNameAsync();
         Task<Result> AddHeroAsync(HeroDto entity);
     }
 }
