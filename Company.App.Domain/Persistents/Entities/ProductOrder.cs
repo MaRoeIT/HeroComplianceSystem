@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Company.App.Infrastructure.Persistents.Entities
+namespace Company.App.Domain.Persistents.Entities
 {
     internal class ProductOrder
     {

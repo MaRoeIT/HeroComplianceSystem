@@ -1,6 +1,6 @@
 ﻿using Company.App.Application.Shared;
-using Company.App.Application.UseCases.DetectBatman;
 using Company.App.Application.UseCases.DataExtraction;
+using Company.App.Application.UseCases.DetectBatman;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,21 +8,21 @@ namespace Company.App.Web.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class HeroController : ControllerBase
+    public class OrderController : ControllerBase
     {
         private readonly IMediator _mediator;
-        private readonly ILogger<HeroController> _logger;
+        private readonly ILogger<OrderController> _logger;
 
-        public HeroController(IMediator mediator, ILogger<HeroController> logger)
+        public OrderController(IMediator mediator, ILogger<OrderController> logger)
         {
             _mediator = mediator;
             _logger = logger;
         }
 
-        [HttpPost("detectBatman")]
-        public async Task<ActionResult<Result<DetectionResult>>> UploadCsv(IFormFile file)
+        [HttpPost("extractPdf")]
+        public async Task<ActionResult<Result<DetectionResult>>> ExtractPdf(IFormFile file)
         {
-            _logger.LogInformation("DetectBatman endpoint called");
+            _logger.LogInformation("DataExtraction endpoint called");
 
             if (file == null || file.Length == 0)
             {
@@ -35,9 +35,10 @@ namespace Company.App.Web.Controllers
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
 
-            var result = await _mediator.Send(new DetectBatmanCommand(stream.ToArray()));
+            stream.Position = 0; // critical for pdf reading position!
 
-            _logger.LogInformation($"Detection complete: {result.IsSuccess}");
+            var result = await _mediator.Send(new ExtractPdfCommand(stream));
+
             return Ok(result);
         }
     }

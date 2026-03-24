@@ -1,31 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Company.App.Application.Interfaces;
+using Company.App.Application.UseCases.DataExtraction.Models;
+using Company.App.Infrastructure.Adapters.Models;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
-using Company.App.Application.UseCases.DataExtraction;
 
-namespace Company.App.Infrastructure.DataExtractor
+namespace Company.App.Infrastructure.Adapters
 {
-    public class PdfWordExtractor
+    public class PdfPigDataExtractor : IPdfDataExtractor
     {
-        public PdfDocumentResult Extract(string path)
+        public ExtractedDocumentDto Extract(Stream stream)
         {
-            var result = new PdfDocumentResult
-            {
-                FilePath = path
-            };
+            var result = new ExtractedDocumentDto();
 
-            using (PdfDocument document = PdfDocument.Open(path))
+            using var document = PdfDocument.Open(stream);
+
+            foreach (Page page in document.GetPages())
             {
-                foreach (Page page in document.GetPages())
+                var pageWords = ExtractWordsFromPage(page).ToList();
+                result.Words.AddRange(pageWords.Select(w => new ExtractedWordDto
                 {
-                    var pageWords = ExtractWordsFromPage(page).ToList();
-                    result.Words.AddRange(pageWords);
+                    Text = w.Text,
+                    PageNumber = w.PageNumber,
+                    X = w.X,
+                    Y = w.Y,
+                    Width = w.Width,
+                    Height = w.Height,
+                }));
 
-                    var pageLines = GroupWordsIntoLines(pageWords, page.Number);
-                    result.Lines.AddRange(pageLines);
-                }
+                var pageLines = GroupWordsIntoLines(pageWords, page.Number);
+                result.Lines.AddRange(pageLines.Select(l => new ExtractedLineDto
+                {
+                    Text = l.Text,
+                    PageNumber = l.PageNumber,
+                    X = l.X,
+                    Y = l.Y,
+                    Width = l.Width,
+                    Height= l.Height,
+                }));
             }
 
             return result;
