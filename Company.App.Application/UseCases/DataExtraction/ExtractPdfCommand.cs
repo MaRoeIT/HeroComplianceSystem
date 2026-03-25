@@ -1,16 +1,8 @@
 ﻿using Company.App.Application.Shared;
-using MediatR;
 using Company.App.Application.UseCases.DataExtraction.Models;
+using MediatR;
 
 namespace Company.App.Application.UseCases.DataExtraction
 {
-    public class ExtractPdfCommand : IRequest<Result<ExtractedDocumentDto>>
-    {
-        public Stream Stream { get; }
-
-        public ExtractPdfCommand(Stream stream)
-        {
-            Stream = stream;
-        }
-    }
+    public record ExtractPdfCommand(byte[] FileData) : IRequest<Result<ExtractedDocumentDto>>;
 }

@@ -5,6 +5,6 @@ namespace Company.App.Application.Interfaces
 {
     public interface IPdfDataExtractor
     {
-        ExtractedDocumentDto Extract(Stream stream);
+        Task<ExtractedDocumentDto> ExtractPdfData(byte[] fileData);
     }
 }

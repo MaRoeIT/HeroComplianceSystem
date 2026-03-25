@@ -8,38 +8,44 @@ namespace Company.App.Infrastructure.Adapters
 {
     public class PdfPigDataExtractor : IPdfDataExtractor
     {
-        public ExtractedDocumentDto Extract(Stream stream)
+        public async Task<ExtractedDocumentDto> ExtractPdfData(byte[] fileData)
         {
-            var result = new ExtractedDocumentDto();
-
-            using var document = PdfDocument.Open(stream);
-
-            foreach (Page page in document.GetPages())
+            return await Task.Run(() =>
             {
-                var pageWords = ExtractWordsFromPage(page).ToList();
-                result.Words.AddRange(pageWords.Select(w => new ExtractedWordDto
-                {
-                    Text = w.Text,
-                    PageNumber = w.PageNumber,
-                    X = w.X,
-                    Y = w.Y,
-                    Width = w.Width,
-                    Height = w.Height,
-                }));
+                using var stream = new MemoryStream(fileData);
+                var result = new ExtractedDocumentDto();
 
-                var pageLines = GroupWordsIntoLines(pageWords, page.Number);
-                result.Lines.AddRange(pageLines.Select(l => new ExtractedLineDto
-                {
-                    Text = l.Text,
-                    PageNumber = l.PageNumber,
-                    X = l.X,
-                    Y = l.Y,
-                    Width = l.Width,
-                    Height= l.Height,
-                }));
-            }
+                using var document = PdfDocument.Open(stream);
 
-            return result;
+                foreach (Page page in document.GetPages())
+                {
+                    var pageWords = ExtractWordsFromPage(page).ToList();
+
+                    result.Words.AddRange(pageWords.Select(w => new ExtractedWordDto
+                    {
+                        Text = w.Text,
+                        PageNumber = w.PageNumber,
+                        X = w.X,
+                        Y = w.Y,
+                        Width = w.Width,
+                        Height = w.Height
+                    }));
+
+                    var pageLines = GroupWordsIntoLines(pageWords, page.Number);
+
+                    result.Lines.AddRange(pageLines.Select(l => new ExtractedLineDto
+                    {
+                        Text = l.Text,
+                        PageNumber = l.PageNumber,
+                        X = l.X,
+                        Y = l.Y,
+                        Width = l.Width,
+                        Height = l.Height
+                    }));
+                }
+
+                return result;
+            });
         }
 
         private IEnumerable<PdfWordModel> ExtractWordsFromPage(Page page)
@@ -69,7 +75,6 @@ namespace Company.App.Infrastructure.Adapters
                 return lines;
             }
 
-            // Simple line grouping by Y-position tolerance
             const double yTolerance = 3.0;
 
             var grouped = words
@@ -82,21 +87,20 @@ namespace Company.App.Infrastructure.Adapters
             {
                 var orderedWords = group.OrderBy(w => w.X).ToList();
 
-                //Calculate line box.
-                var MinX = orderedWords.Min(w => w.X);
-                var MaxX = orderedWords.Max(w => w.X + w.Width);
-                var MinY = orderedWords.Min(w => w.Y);
-                var MaxY = orderedWords.Max(w => w.Y + w.Height);
+                var minX = orderedWords.Min(w => w.X);
+                var maxX = orderedWords.Max(w => w.X + w.Width);
+                var minY = orderedWords.Min(w => w.Y);
+                var maxY = orderedWords.Max(w => w.Y + w.Height);
 
                 lines.Add(new PdfLineModel
                 {
                     PageNumber = pageNumber,
                     Words = orderedWords,
                     Text = string.Join(" ", orderedWords.Select(w => w.Text)),
-                    X = MinX,
-                    Y = MinY,
-                    Width = MaxX - MinX,
-                    Height = MaxY - MinY
+                    X = minX,
+                    Y = minY,
+                    Width = maxX - minX,
+                    Height = maxY - minY
                 });
             }
 

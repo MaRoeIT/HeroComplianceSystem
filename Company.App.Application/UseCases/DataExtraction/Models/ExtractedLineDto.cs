@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Company.App.Application.UseCases.DataExtraction.Models
 {
-    public class ExtractedLineDto
+    public record ExtractedLineDto
     {
         public int PageNumber { get; set; }
         public string Text { get; set; } = string.Empty;

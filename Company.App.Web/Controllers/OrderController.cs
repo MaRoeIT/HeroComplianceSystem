@@ -1,5 +1,6 @@
 ﻿using Company.App.Application.Shared;
 using Company.App.Application.UseCases.DataExtraction;
+using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DetectBatman;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ namespace Company.App.Web.Controllers
         }
 
         [HttpPost("extractPdf")]
-        public async Task<ActionResult<Result<DetectionResult>>> ExtractPdf(IFormFile file)
+        public async Task<ActionResult<Result<ExtractedDocumentDto>>> ExtractPdf(IFormFile file)
         {
             _logger.LogInformation("DataExtraction endpoint called");
 
@@ -35,9 +36,7 @@ namespace Company.App.Web.Controllers
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
 
-            stream.Position = 0; // critical for pdf reading position!
-
-            var result = await _mediator.Send(new ExtractPdfCommand(stream));
+            var result = await _mediator.Send(new ExtractPdfCommand(stream.ToArray()));
 
             return Ok(result);
         }

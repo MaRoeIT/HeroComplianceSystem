@@ -1,0 +1,189 @@
+﻿@page "/pdf-extractor"
+@rendermode InteractiveServer
+@using Company.App.Application.Shared
+@using Company.App.Application.UseCases.DataExtraction.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>PDF Extractor - Hero Compliance System</PageTitle>
+
+<MudText Typo="Typo.h2" GutterBottom="true">
+    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Class="mr-2" />
+    PDF Extractor
+</MudText>
+<MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-6">
+    Generic PDF text extraction
+</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="8">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudText Typo="Typo.h6" Class="mb-4">Upload PDF File</MudText>
+
+            <MudFileUpload T="IBrowserFile"
+                           @ref="_fileUpload"
+                           Accept=".pdf,application/pdf"
+                           OnFilesChanged="HandleFileSelected"
+                           MaximumFileCount="1">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                               OnClick="OpenFilePicker"
+                               Size="Size.Large"
+                               FullWidth="true">
+                        Select PDF File
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+
+            @if (_isProcessing)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-4" />
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">
+                    <em>Extracting text and line structure from PDF...</em>
+                </MudText>
+            }
+            else if (!string.IsNullOrWhiteSpace(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4" Elevation="2">
+                    @_errorMessage
+                </MudAlert>
+            }
+            else if (_result?.IsSuccess == true && _document != null)
+            {
+                <MudAlert Severity="Severity.Success" Class="mt-4" Elevation="2">
+                    <MudText Typo="Typo.h6">PDF extraction completed.</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Words extracted: @_document.Words.Count
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        Lines extracted: @_document.Lines.Count
+                    </MudText>
+                </MudAlert>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.h6" Class="mb-2">Preview of extracted lines</MudText>
+                <MudText Typo="Typo.h6" Class="mb-2">Page|X|Y|Lenght|Text</MudText>
+
+                @if (_document.Lines.Any())
+                {
+                    <MudPaper Outlined="true" Class="pa-4" Style="max-height: 400px; overflow-y: auto;">
+                        @foreach (var line in _document.Lines.Take(10000))
+                        {
+                            <MudText Typo="Typo.body2" Class="mb-1">
+                                <strong>@(line.PageNumber)</strong> | @line.X.ToString("F2") | @line.Y.ToString("F2") | @line.Width.ToString("F2") | @line.Text
+                            </MudText>
+                        }
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        No lines were extracted from the file.
+                    </MudText>
+                }
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudText Typo="Typo.h6" GutterBottom="true">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
+                Instructions
+            </MudText>
+
+            <MudText Typo="Typo.body2" Class="mb-2">
+                1. Select a PDF document
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                2. The system extracts words and grouped lines
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                3. No content-specific mapping is applied yet
+            </MudText>
+            <MudText Typo="Typo.body2">
+                4. Review the extracted structure before domain mapping
+            </MudText>
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                This page is intended as a generic PDF ingestion step before mapping into order models.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private MudFileUpload<IBrowserFile>? _fileUpload;
+    private bool _isProcessing;
+    private string? _errorMessage;
+    private Result<ExtractedDocumentDto>? _result;
+    private ExtractedDocumentDto? _document;
+
+    private async Task OpenFilePicker()
+    {
+        if (_fileUpload is not null)
+        {
+            await _fileUpload.OpenFilePickerAsync();
+        }
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        _isProcessing = true;
+        _errorMessage = null;
+        _result = null;
+        _document = null;
+        StateHasChanged();
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("HeroAPI");
+
+            using var content = new MultipartFormDataContent();
+            using var stream = new MemoryStream();
+
+            await file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024).CopyToAsync(stream);
+            stream.Position = 0;
+
+            var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+
+            content.Add(fileContent, "file", file.Name);
+
+            var apiUrl = new Uri(Navigation.BaseUri + "api/v1/order/extractPdf");
+            var response = await httpClient.PostAsync(apiUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _result = await response.Content.ReadFromJsonAsync<Result<ExtractedDocumentDto>>();
+                _document = _result?.Value;
+
+                if (_result is null || !_result.IsSuccess)
+                {
+                    _errorMessage = _result?.Error?? "PDF extraction failed.";
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _errorMessage = $"API error: {response.ReasonPhrase}. {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+
+        _isProcessing = false;
+        StateHasChanged();
+    }
+}

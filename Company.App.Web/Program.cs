@@ -1,4 +1,5 @@
 using Company.App.Application.Interfaces;
+using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DetectBatman;
 using Company.App.Infrastructure.Adapters;
 using Company.App.Web;
@@ -7,11 +8,12 @@ using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DetectBatmanCommand).Assembly));
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ExtractPdfCommand).Assembly));
 
+builder.Services.AddScoped<IPdfDataExtractor, PdfPigDataExtractor>();
 builder.Services.AddScoped<IHeroScanner, CsvHeroScanner>();
 
-builder.Services.AddHttpClient("HeroAPI");
+builder.Services.AddHttpClient("PdfExtractAPI");
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

@@ -5,16 +5,16 @@ namespace Company.App.Application.UseCases.DataExtraction
 {
     public class ExtractPdfUseCase
     {
-        private readonly IPdfDataExtractor _extractor;
+        private readonly IPdfDataExtractor _scanner;
 
-        public ExtractPdfUseCase(IPdfDataExtractor extractor)
+        public ExtractPdfUseCase(IPdfDataExtractor scanner)
         {
-            _extractor = extractor;
+            _scanner = scanner;
         }
 
-        public ExtractedDocumentDto Execute(Stream stream)
+        public Task<ExtractedDocumentDto> Execute(byte[] fileData)
         {
-            return _extractor.Extract(stream);
+            return _scanner.ExtractPdfData(fileData);
         }
     }
 }
