@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Company.App.Application.Shared
 @using Company.App.Application.UseCases.DataExtraction.Models
+@using Company.App.Application.UseCases.DataMapping.Models
 @using Microsoft.AspNetCore.Components.Forms
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
@@ -55,12 +56,9 @@
             {
                 <MudAlert Severity="Severity.Success" Class="mt-4" Elevation="2">
                     <MudText Typo="Typo.h6">PDF extraction completed.</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-2">
-                        Words extracted: @_document.Words.Count
-                    </MudText>
-                    <MudText Typo="Typo.body2">
-                        Lines extracted: @_document.Lines.Count
-                    </MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">Document type: <strong>@(_documentTypeText ?? "Unknown")</strong></MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">Words extracted: @_document.Words.Count</MudText>
+                    <MudText Typo="Typo.body2">Lines extracted: @_document.Lines.Count</MudText>
                 </MudAlert>
 
                 <MudDivider Class="my-4" />
@@ -141,41 +139,80 @@
         _errorMessage = null;
         _result = null;
         _document = null;
+        _mappingResult = null;
+        _documentTypeText = null;
         StateHasChanged();
 
         try
         {
-            var httpClient = HttpClientFactory.CreateClient("HeroAPI");
+            var httpClient = HttpClientFactory.CreateClient("PdfExtractAPI");
 
-            using var content = new MultipartFormDataContent();
-            using var stream = new MemoryStream();
-
-            await file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024).CopyToAsync(stream);
-            stream.Position = 0;
-
-            var fileContent = new StreamContent(stream);
-            fileContent.Headers.ContentType =
-                new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
-
-            content.Add(fileContent, "file", file.Name);
-
-            var apiUrl = new Uri(Navigation.BaseUri + "api/v1/order/extractPdf");
-            var response = await httpClient.PostAsync(apiUrl, content);
-
-            if (response.IsSuccessStatusCode)
+            byte[] fileBytes;
+            using (var stream = new MemoryStream())
             {
-                _result = await response.Content.ReadFromJsonAsync<Result<ExtractedDocumentDto>>();
-                _document = _result?.Value;
+                await file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024).CopyToAsync(stream);
+                fileBytes = stream.ToArray();
+            }
 
-                if (_result is null || !_result.IsSuccess)
+            using (var extractContent = new MultipartFormDataContent())
+            {
+                var extractFileContent = new ByteArrayContent(fileBytes);
+                extractFileContent.Headers.ContentType =
+                    new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+
+                extractContent.Add(extractFileContent, "file", file.Name);
+
+                var extractUrl = new Uri(Navigation.BaseUri + "api/v1/order/extractPdf");
+                var extractResponse = await httpClient.PostAsync(extractUrl, extractContent);
+
+                if (extractResponse.IsSuccessStatusCode)
                 {
-                    _errorMessage = _result?.Error?? "PDF extraction failed.";
+                    _result = await extractResponse.Content.ReadFromJsonAsync<Result<ExtractedDocumentDto>>();
+                    _document = _result?.Value;
+
+                    if (_result is null || !_result.IsSuccess)
+                    {
+                        _errorMessage = _result?.Error ?? "PDF extraction failed.";
+                    }
+                }
+                else
+                {
+                    var errorContent = await extractResponse.Content.ReadAsStringAsync();
+                    _errorMessage = $"API error: {extractResponse.ReasonPhrase}. {errorContent}";
                 }
             }
-            else
+
+            if (string.IsNullOrWhiteSpace(_errorMessage))
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _errorMessage = $"API error: {response.ReasonPhrase}. {errorContent}";
+                using var mapContent = new MultipartFormDataContent();
+
+                var mapFileContent = new ByteArrayContent(fileBytes);
+                mapFileContent.Headers.ContentType =
+                    new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+
+                mapContent.Add(mapFileContent, "file", file.Name);
+
+                var mapUrl = new Uri(Navigation.BaseUri + "api/v1/order/mapDocument");
+                var mapResponse = await httpClient.PostAsync(mapUrl, mapContent);
+
+                if (mapResponse.IsSuccessStatusCode)
+                {
+                    _mappingResult = await mapResponse.Content.ReadFromJsonAsync<Result<DocumentMappingResultDto>>();
+
+                    if (_mappingResult?.Value is not null)
+                    {
+                        _documentTypeText = _mappingResult.Value.DocumentType.ToString();
+                    }
+                    else if (_mappingResult is not null && !_mappingResult.IsSuccess)
+                    {
+                        _documentTypeText = "Unknown";
+                    }
+                }
+                else
+                {
+                    var errorContent = await mapResponse.Content.ReadAsStringAsync();
+                    _errorMessage = $"Mapping API error: {mapResponse.ReasonPhrase}. {errorContent}";
+                }
             }
         }
         catch (Exception ex)
@@ -186,4 +223,8 @@
         _isProcessing = false;
         StateHasChanged();
     }
+
+    // Get DocumentType
+    private Result<DocumentMappingResultDto>? _mappingResult;
+    private string? _documentTypeText;
 }

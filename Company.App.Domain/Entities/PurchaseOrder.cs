@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Company.App.Domain.Persistents.Entities
+namespace Company.App.Domain.Entities
 {
-    internal class ProductOrder
+    public record PurchaseOrder
     {
-        public string OrderNumber { get; set; } = string.Empty;
-        public string OrderDate { get; set; } = string.Empty;
-        public ProductOrderHeader Header { get; set; } = new();
-        public ProductOrderOverhead Overhead { get; set; } = new();
-        public List<ProductOrderItem> Items { get; set; } = new();
-        public string TotalNetValue { get; set; } = string.Empty;
-        public string TotalAmount { get; set; } = string.Empty;
+        public string OrderNumber { get; } = string.Empty;
+        public string OrderDate { get; } = string.Empty;
+        public PurchaseOrderHeader Header { get; } = new();
+        public PurchaseOrderOverhead Overhead { get; } = new();
+        public List<PurchaseOrderItem> Items { get; } = new();
+        public string TotalNetValue { get; } = string.Empty;
+        public string TotalAmount { get; } = string.Empty;
 
     }
-    public class ProductOrderHeader
+    public class PurchaseOrderHeader
     {
         public Seller Seller { get; set; } = new();
         public Buyer Buyer { get; set; } = new();
@@ -26,7 +26,7 @@ namespace Company.App.Domain.Persistents.Entities
     }
     public class Seller
     {
-        public string ProductOrderNumber { get; set; } = string.Empty;
+        public string PurchaseOrderNumber { get; set; } = string.Empty;
         public string VendorNumber { get; set; } = string.Empty;
         public string FaxNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
@@ -62,16 +62,16 @@ namespace Company.App.Domain.Persistents.Entities
     {
         public string CustomerType { get; set; } = string.Empty;
     }
-    public class ProductOrderOverhead
+    public class PurchaseOrderOverhead
     {
         public List<int> PageNumber { get; set; } = new();
         public string Section { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public List<string> Content { get; set; } = new();
         public List<string> BulletPoints { get; set; } = new();
-        public List<ProductOrderOverhead> SubSections { get; set; } = new();
+        public List<PurchaseOrderOverhead> SubSections { get; set; } = new();
     }
-    public class ProductOrderItem
+    public class PurchaseOrderItem
     {
         public string ItemNumber { get; set; } = string.Empty;
         public List<int> PageNumber { get; set; } = new();

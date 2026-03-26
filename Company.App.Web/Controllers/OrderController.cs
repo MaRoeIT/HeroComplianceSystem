@@ -1,6 +1,8 @@
 ﻿using Company.App.Application.Shared;
 using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataExtraction.Models;
+using Company.App.Application.UseCases.DataMapping;
+using Company.App.Application.UseCases.DataMapping.Models;
 using Company.App.Application.UseCases.DetectBatman;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +39,28 @@ namespace Company.App.Web.Controllers
             await file.CopyToAsync(stream);
 
             var result = await _mediator.Send(new ExtractPdfCommand(stream.ToArray()));
+
+            return Ok(result);
+        }
+
+        [HttpPost("mapDocument")]
+        public async Task<ActionResult<Result<DocumentMappingResultDto>>> MapDocument(IFormFile file)
+        {
+            _logger.LogInformation("MapDocument endpoint called");
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+
+            var command = new MapDocumentCommand(stream.ToArray());
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
 
             return Ok(result);
         }
