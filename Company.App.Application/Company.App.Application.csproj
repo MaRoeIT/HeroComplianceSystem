@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -12,6 +12,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Company.App.Domain\Company.App.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="UseCases\AddHero\Models\" />
+    <Folder Include="UseCases\LookupHeroByName\Models\" />
   </ItemGroup>
 
 </Project>
