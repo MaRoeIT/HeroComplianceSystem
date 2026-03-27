@@ -22,7 +22,7 @@ namespace Company.App.Infrastructure.Persistence.Repositories
         public async Task<Result<HeroByNameResult>>GetHeroByNameAsync(string name)
         {
             HeroDbModel? dbHero = await _context.Heroes.FirstOrDefaultAsync(hero => hero.Name == name);
-            if (dbHero == null) return new Result<HeroByNameResult>(null,true);
+            if (dbHero == null) return new Result<HeroByNameResult>(new HeroByNameResult(false, null, null, DateTime.MinValue), true);
 
             return new Result<HeroByNameResult>(new HeroByNameResult(true,dbHero.Name,dbHero.SecretIdentity,dbHero.LastUpdated),true);
         }
