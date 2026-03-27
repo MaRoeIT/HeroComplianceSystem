@@ -29,8 +29,7 @@ namespace Company.App.Infrastructure.Persistence.Repositories
 
         public async Task<Result<List<HeroByNameResult>>>GetAllHeroesByNameAsync()
         {
-            List<HeroDbModel>? dbHeroes = await _context.Heroes.ToListAsync<HeroDbModel>();
-            if (dbHeroes == null) return new Result<List<HeroByNameResult>>(null, true);
+            List<HeroDbModel> dbHeroes = await _context.Heroes.ToListAsync<HeroDbModel>();
 
             List<HeroByNameResult> result = new();
 
