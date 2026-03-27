@@ -271,7 +271,8 @@
         try
         {
             var httpClient = HttpClientFactory.CreateClient();
-            var apiUrl = Navigation.ToAbsoluteUri($"/api/v1/hero/heroes/{_searchName}").ToString();
+            var encodedSearchName = System.Uri.EscapeDataString(_searchName);
+            var apiUrl = Navigation.ToAbsoluteUri($"/api/v1/hero/heroes/{encodedSearchName}").ToString();
             var response = await httpClient.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
