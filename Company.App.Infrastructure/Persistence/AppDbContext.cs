@@ -13,7 +13,7 @@ namespace Company.App.Infrastructure.Persistence
             
         }
 
-        public DbSet<HeroDbModel> Heroes { get; set; }
+        public DbSet<HeroDbModel> Heroes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
