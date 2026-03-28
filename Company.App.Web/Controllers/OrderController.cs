@@ -60,7 +60,12 @@ namespace Company.App.Web.Controllers
             var result = await _mediator.Send(command);
 
             if (!result.IsSuccess)
-                return BadRequest(result);
+                return BadRequest(new
+                {
+                    message = "Document type could not be identified.",
+                    DocumentType = result.Value?.DocumentType.ToString(),
+                    suggestion = "Please controll that the uploaded content in the file corresponds to the intended dokument type."
+                });
 
             return Ok(result);
         }
