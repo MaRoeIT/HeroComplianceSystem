@@ -4,6 +4,10 @@ using Company.App.Domain.Specification;
 
 namespace Company.App.Application.UseCases.DataMapping
 {
+    /// <summary>
+    /// Determines the type of an extracted document by inspecting
+    /// candidate header lines and evaluating them against domain specifications.
+    /// </summary>
     public class DocumentTypeDecider : IDocumentTypeDecider
     {
         private readonly IsOrderDocumentSpec _spec;
@@ -15,6 +19,7 @@ namespace Company.App.Application.UseCases.DataMapping
 
         public DocumentType Decide(DocumentHeaderContextDto context)
         {
+            // Inspect candidate header lines in order to identify the document type.
             foreach (var line in context.CandidateLines)
             {
                 var text = Normalize(line.Text);
@@ -29,9 +34,13 @@ namespace Company.App.Application.UseCases.DataMapping
                     return DocumentType.AdministrativeRequirements;
             }
 
+            // Return Unknown when no known document pattern is matched.
             return DocumentType.Unknown;
         }
 
+        /// <summary>
+        /// Applies basic normalization before text is evaluated against specifications.
+        /// </summary>
         private static string Normalize(string value)
         {
             return value.Trim();

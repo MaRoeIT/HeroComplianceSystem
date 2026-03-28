@@ -4,11 +4,22 @@ using System.Text;
 
 namespace Company.App.Application.UseCases.DataMapping.Models
 {
+    /// <summary>
+    /// Represents the supported document types that can be identified
+    /// and mapped by the application.
+    /// </summary>
     public enum DocumentType
     {
+        // The document type could not be identified.
         Unknown = 0,
+
+        // A purchase order document.
         PurchaseOrder = 1,
+
+        // A material documentation package document.
         MaterialDocumentationPackage = 2,
+
+        // An administrative requirements document.
         AdministrativeRequirements = 3
     }
 }
