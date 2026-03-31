@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -18,6 +18,8 @@
     <Folder Include="UseCases\DataMapping\AdministrativeRequirements\Models\" />
     <Folder Include="UseCases\DataMapping\MaterialDocumentationPackage\Models\" />
     <Folder Include="UseCases\DataMapping\PurchaseOrder\Models\" />
+    <Folder Include="UseCases\AddHero\Models\" />
+    <Folder Include="UseCases\LookupHeroByName\Models\" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,6 @@
+services:
+  company.app.web:
+    image: ${DOCKER_REGISTRY-}companyappweb
+    build:
+      context: .
+      dockerfile: Company.App.Web/Dockerfile

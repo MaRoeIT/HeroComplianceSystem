@@ -1,6 +1,10 @@
 ﻿using Company.App.Application.Shared;
+using Company.App.Application.UseCases.AddHero;
 using Company.App.Application.UseCases.DetectBatman;
 using Company.App.Application.UseCases.DataExtraction;
+using Company.App.Application.UseCases.DetectBatman.Models;
+using Company.App.Application.UseCases.GetAllHeroes;
+using Company.App.Application.UseCases.LookupHeroByName;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,6 +42,40 @@ namespace Company.App.Web.Controllers
             var result = await _mediator.Send(new DetectBatmanCommand(stream.ToArray()));
 
             _logger.LogInformation($"Detection complete: {result.IsSuccess}");
+            return Ok(result);
+        }
+
+        [HttpGet("heroes")]
+        public async Task<ActionResult<Result<List<HeroByNameResult>>>> GetAllHeroes()
+        {
+            var result = await _mediator.Send(new GetAllHeroesQuery());
+            return Ok(result);
+        }
+
+        [HttpGet("heroes/{name}")]
+        public async Task<ActionResult<Result<HeroByNameResult>>> GetHeroByName(string name)
+        {
+            _logger.LogInformation("Heroes/{name} endpoint called");
+
+            if(string.IsNullOrEmpty(name))
+            {
+                _logger.LogInformation($"Name is null or empty");
+                return BadRequest("Name is null or empty");
+            }
+
+            var result = await _mediator.Send(new LookupHeroByNameQuery(name));
+            return Ok(result);
+        }
+
+        [HttpPost("heroes")]
+        public async Task<ActionResult<Result>> AddHero(HeroDto hero)
+        {
+            if(hero == null)
+            {
+                return BadRequest("Hero is not included");
+            }
+
+            var result = await _mediator.Send(new AddHeroCommand(hero));
             return Ok(result);
         }
     }
