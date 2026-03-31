@@ -15,6 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="UseCases\DataMapping\AdministrativeRequirements\Models\" />
+    <Folder Include="UseCases\DataMapping\MaterialDocumentationPackage\Models\" />
+    <Folder Include="UseCases\DataMapping\PurchaseOrder\Models\" />
     <Folder Include="UseCases\AddHero\Models\" />
     <Folder Include="UseCases\LookupHeroByName\Models\" />
   </ItemGroup>

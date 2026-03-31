@@ -1,6 +1,7 @@
 ﻿using Company.App.Application.Shared;
 using Company.App.Application.UseCases.AddHero;
 using Company.App.Application.UseCases.DetectBatman;
+using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DetectBatman.Models;
 using Company.App.Application.UseCases.GetAllHeroes;
 using Company.App.Application.UseCases.LookupHeroByName;
