@@ -6,9 +6,16 @@
     public record Order
     {
         // Gets the order number associated with the document.
-        public string OrderNumber { get; } = string.Empty;
+        public string OrderNumber { get; }
 
         // Gets the order date associated with the document.
-        public string OrderDate { get; } = string.Empty;
+        public string OrderDate { get; }
+
+        // Contructor
+        public Order(string orderNumber, string orderDate)
+        {
+            OrderNumber = orderNumber;
+            OrderDate = orderDate;
+        }
     }
 }

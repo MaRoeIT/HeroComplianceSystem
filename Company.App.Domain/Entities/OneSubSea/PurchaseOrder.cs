@@ -7,23 +7,40 @@
     public record PurchaseOrder : Order
     {
         // Gets the structured header information for the purchase order.
-        public PurchaseOrderHeader Header { get; } = new();
+        public PurchaseOrderHeader Header { get; }
 
         // Gets the overhead section content of the purchase order,
         // such as general document sections and free-text blocks.
-        public PurchaseOrderOverhead Overhead { get; } = new();
+        public PurchaseOrderOverhead Overhead { get; }
 
         // Gets the collection of line items included in the purchase order.
-        public List<PurchaseOrderItem> Items { get; } = new();
+        public List<PurchaseOrderItem> Items { get; }
 
         // Gets the total net value for the purchase order.
-        public string TotalNetValue { get; } = string.Empty;
+        public string TotalNetValue { get; }
 
         // Gets the total quantity or amount summary for the purchase order.
-        public string TotalAmount { get; } = string.Empty;
+        public string TotalAmount { get; }
 
+        // Constructor.
+        public PurchaseOrder(
+            string orderNumber,
+            string orderDate,
+            PurchaseOrderHeader header,
+            PurchaseOrderOverhead overhead,
+            List<PurchaseOrderItem> items,
+            string totalNetValue,
+            string totalAmount
+        ) : base(orderNumber, orderDate)
+        {
+            Header = header;
+            Overhead = overhead;
+            Items = items;
+            TotalNetValue = totalNetValue;
+            TotalAmount = totalAmount;
+        }
     }
-    
+
     /// <summary>
     /// Represents the header section of a purchase order,
     /// including buyer, seller, and address-related information.
@@ -31,19 +48,34 @@
     public record PurchaseOrderHeader
     {
         // Gets the seller-related details found in the purchase order header.
-        public Seller Seller { get; } = new();
+        public Seller Seller { get; }
 
         // Gets the buyer-related details found in the purchase order header.
-        public Buyer Buyer { get; } = new();
+        public Buyer Buyer { get; }
 
         // Gets the vendor address associated with the order.
-        public Address VendorAddress { get; } = new();
+        public Address VendorAddress { get; }
 
         // Gets the invoice address associated with the order.
-        public Address InvoiceAddress { get; } = new();
+        public Address InvoiceAddress { get; }
 
         // Gets the delivery address associated with the order.
-        public DeliveryAddress DeliveryAddress { get; } = new();
+        public DeliveryAddress DeliveryAddress { get; }
+
+        // Constructor.
+        public PurchaseOrderHeader(
+            Seller seller,
+            Buyer buyer,
+            Address vendorAddress,
+            Address invoiceAddress,
+            DeliveryAddress deliveryAddress)
+        {
+            Seller = seller;
+            Buyer = buyer;
+            VendorAddress = vendorAddress;
+            InvoiceAddress = invoiceAddress;
+            DeliveryAddress = deliveryAddress;
+        }
     }
 
     /// <summary>
@@ -52,34 +84,59 @@
     public record Seller
     {
         // Gets the purchase order number referenced by the seller section.
-        public string PurchaseOrderNumber { get; } = string.Empty;
+        public string PurchaseOrderNumber { get; }
 
         // Gets the vendor number.
-        public string VendorNumber { get; } = string.Empty;
+        public string VendorNumber { get; }
 
         // Gets the fax number for the seller.
-        public string FaxNumber { get; } = string.Empty;
+        public string FaxNumber { get; }
 
         // Gets the email address for the seller.
-        public string Email { get; } = string.Empty;
+        public string Email { get; }
 
         // Gets the contact person for the seller.
-        public string ContactPerson { get; } = string.Empty;
+        public string ContactPerson { get; }
 
         // Gets the frame agreement reference.
-        public string FrameAgreement { get; } = string.Empty;
+        public string FrameAgreement { get; }
 
         // Gets the Incoterms code or label.
-        public string IncoTerms { get; } = string.Empty;
+        public string IncoTerms { get; }
 
         // Gets the descriptive text related to the Incoterms field.
-        public string IncoTermsDescription { get; } = string.Empty;
+        public string IncoTermsDescription { get; }
 
         // Gets the major or minor classification value.
-        public string MajorMinor { get; } = string.Empty;
+        public string MajorMinor { get; }
 
         // Gets the intercompany indicator or value.
-        public string Intercompany { get; } = string.Empty;
+        public string Intercompany { get; }
+
+        // Constructor.
+        public Seller(
+            string purchaseOrderNumber,
+            string vendorNumber,
+            string faxNumber,
+            string email,
+            string contactPerson,
+            string frameAgreement,
+            string incoTerms,
+            string incoTermsDescription,
+            string majorMinor,
+            string intercompany)
+        {
+            PurchaseOrderNumber = purchaseOrderNumber;
+            VendorNumber = vendorNumber;
+            FaxNumber = faxNumber;
+            Email = email;
+            ContactPerson = contactPerson;
+            FrameAgreement = frameAgreement;
+            IncoTerms = incoTerms;
+            IncoTermsDescription = incoTermsDescription;
+            MajorMinor = majorMinor;
+            Intercompany = intercompany;
+        }
     }
 
     /// <summary>
@@ -88,31 +145,54 @@
     public record Buyer
     {
         // Gets the revision number of the purchase order.
-        public string RevisionNumber { get; } = string.Empty;
+        public string RevisionNumber { get; }
 
         // Gets the creation date of the purchase order.
-        public string DateCreated { get; } = string.Empty;
+        public string DateCreated { get; }
 
         // Gets the currency used in the purchase order.
-        public string Currency { get; } = string.Empty;
+        public string Currency { get; }
 
         // Gets the buyer contact person.
-        public string ContactPerson { get; } = string.Empty;
+        public string ContactPerson { get; }
 
         // Gets the confirmation fax value.
-        public string ConfirmationFax { get; } = string.Empty;
+        public string ConfirmationFax { get; }
 
         // Gets the frame agreement reference.
-        public string FrameAgreement { get; } = string.Empty;
+        public string FrameAgreement { get; }
 
         // Gets the payment terms for the order.
-        public string PaymentTerms { get; } = string.Empty;
+        public string PaymentTerms { get; }
 
         // Gets the technical contact reference.
-        public string TechnicalContact { get; } = string.Empty;
+        public string TechnicalContact { get; }
 
         // Gets the quality-system responsible contact or reference.
-        public string QSResponsible { get; } = string.Empty;
+        public string QSResponsible { get; }
+
+        // Constructor.
+        public Buyer(
+            string revisionNumber,
+            string dateCreated,
+            string currency,
+            string contactPerson,
+            string confirmationFax,
+            string frameAgreement,
+            string paymentTerms,
+            string technicalContact,
+            string qSResponsible)
+        {
+            RevisionNumber = revisionNumber;
+            DateCreated = dateCreated;
+            Currency = currency;
+            ContactPerson = contactPerson;
+            ConfirmationFax = confirmationFax;
+            FrameAgreement = frameAgreement;
+            PaymentTerms = paymentTerms;
+            TechnicalContact = technicalContact;
+            QSResponsible = qSResponsible;
+        }
     }
 
     /// <summary>
@@ -121,22 +201,39 @@
     public record Address
     {
         // Gets the company name for the address.
-        public string CompanyName { get; } = string.Empty;
+        public string CompanyName { get; }
 
         // Gets the street name for the address.
-        public string StreetName { get; } = string.Empty;
+        public string StreetName { get; }
 
         // Gets the street number for the address.
-        public string StreetNumber { get; } = string.Empty;
+        public string StreetNumber { get; }
 
         // Gets the postal code for the address.
-        public string PostalNumber { get; } = string.Empty;
+        public string PostalNumber { get; }
 
         // Gets the city for the address.
-        public string City { get; } = string.Empty;
+        public string City { get; }
 
         // Gets the country for the address.
-        public string? Country { get; } = string.Empty;
+        public string? Country { get; }
+
+        // Constructor.
+        public Address(
+            string companyName,
+            string streetName,
+            string streetNumber,
+            string postalNumber,
+            string city,
+            string? country)
+        {
+            CompanyName = companyName;
+            StreetName = streetName;
+            StreetNumber = streetNumber;
+            PostalNumber = postalNumber;
+            City = city;
+            Country = country;
+        }
     }
 
     /// <summary>
@@ -145,7 +242,27 @@
     public record DeliveryAddress : Address
     {
         // Gets the customer type associated with the delivery address.
-        public string CustomerType { get; } = string.Empty;
+        public string CustomerType { get; }
+
+        // Constructor.
+        public DeliveryAddress(
+            string companyName,
+            string streetName,
+            string streetNumber,
+            string postalNumber,
+            string city,
+            string? country,
+            string customerType
+        ) : base(
+                companyName,
+                streetName,
+                streetNumber,
+                postalNumber,
+                city,
+                country)
+        {
+            CustomerType = customerType;
+        }
     }
 
     /// <summary>
@@ -155,22 +272,39 @@
     public record PurchaseOrderOverhead
     {
         // Gets the page numbers where this section appears.
-        public List<int> PageNumber { get; } = new();
+        public List<int> PageNumber { get; }
 
         // Gets the logical section identifier or label.
-        public string Section { get; } = string.Empty;
+        public string Section { get; }
 
         // Gets the title of the section.
-        public string Title { get; } = string.Empty;
+        public string Title { get; }
 
         // Gets the free-text content lines belonging to this section.
-        public List<string> Content { get; } = new();
+        public List<string> Content { get; }
 
         // Gets the bullet-point entries belonging to this section.
-        public List<string> BulletPoints { get; } = new();
+        public List<string> BulletPoints { get; }
 
         // Gets nested subsections contained within this section.
-        public List<PurchaseOrderOverhead> SubSections { get; } = new();
+        public List<PurchaseOrderOverhead> SubSections { get; }
+
+        // Constructor.
+        public PurchaseOrderOverhead(
+            List<int> pageNumber,
+            string section,
+            string title,
+            List<string> content,
+            List<string> bulletPoints,
+            List<PurchaseOrderOverhead> subSections)
+        {
+            PageNumber = pageNumber;
+            Section = section;
+            Title = title;
+            Content = content;
+            BulletPoints = bulletPoints;
+            SubSections = subSections;
+        }
     }
 
     /// <summary>
@@ -179,28 +313,49 @@
     public record PurchaseOrderItem
     {
         // Gets the line item number.
-        public string ItemNumber { get; } = string.Empty;
+        public string ItemNumber { get; }
 
         // Gets the page numbers where this item appears.
-        public List<int> PageNumber { get; } = new();
+        public List<int> PageNumber { get; }
 
         // Gets the material descriptions associated with this item.
-        public List<MaterialDescription> MaterialDescriptions { get; } = new();
+        public List<MaterialDescription> MaterialDescriptions { get; }
 
         // Gets the revision value for the item.
-        public string Revision { get; } = string.Empty;
+        public string Revision { get; }
 
         // Gets the ordered quantity.
-        public string Quantity { get; } = string.Empty;
+        public string Quantity { get; }
 
         // Gets the order unit.
-        public string OrderUnit { get; } = string.Empty;
+        public string OrderUnit { get; }
 
         // Gets the net price for the item.
-        public string NetPrice { get; } = string.Empty;
+        public string NetPrice { get; }
 
         // Gets the net amount for the item.
-        public string NetAmount { get; } = string.Empty;
+        public string NetAmount { get; }
+
+        // Constructor.
+        public PurchaseOrderItem(
+            string itemNumber,
+            List<int> pageNumber,
+            List<MaterialDescription> materialDescriptions,
+            string revision,
+            string quantity,
+            string orderUnit,
+            string netPrice,
+            string netAmount)
+        {
+            ItemNumber = itemNumber;
+            PageNumber = pageNumber;
+            MaterialDescriptions = materialDescriptions;
+            Revision = revision;
+            Quantity = quantity;
+            OrderUnit = orderUnit;
+            NetPrice = netPrice;
+            NetAmount = netAmount;
+        }
     }
 
     /// <summary>
@@ -209,34 +364,59 @@
     public record MaterialDescription
     {
         // Gets the material number.
-        public string MaterialNumber { get; } = string.Empty;
+        public string MaterialNumber { get; }
 
         // Gets the material name or description.
-        public string MaterialName { get; } = string.Empty;
+        public string MaterialName { get; }
 
         // Gets the traceability code.
-        public string TraceabilityCode { get; } = string.Empty;
+        public string TraceabilityCode { get; }
 
         // Gets the reference to the supplier traceability specification document.
-        public string DocRefTraceabilitySpecificationForSuppliers { get; } = string.Empty;
+        public string DocRefTraceabilitySpecificationForSuppliers { get; }
 
         // Gets the outline agreement number.
-        public string OutlineAgreementNumber { get; } = string.Empty;
+        public string OutlineAgreementNumber { get; }
 
         // Gets related basic data text values for the material.
-        public BasicDataText BasicDataTexts { get; } = new();
+        public BasicDataText BasicDataTexts { get; }
 
         // Gets the manufacturer name.
-        public string Manufacturer { get; } = string.Empty;
+        public string Manufacturer { get; }
 
         // Gets the work breakdown structure reference.
-        public string WorkBreakdownStructure { get; } = string.Empty;
+        public string WorkBreakdownStructure { get; }
 
         // Gets the manufacturer part number.
-        public string ManufacturerPartNo { get; } = string.Empty;
+        public string ManufacturerPartNo { get; }
 
         // Gets the delivery date for the material, if available.
         public string? DeliveryDate { get; }
+
+        // Constructor.
+        public MaterialDescription(
+            string materialNumber,
+            string materialName,
+            string traceabilityCode,
+            string docRefTraceabilitySpecificationForSuppliers,
+            string outlineAgreementNumber,
+            BasicDataText basicDataTexts,
+            string manufacturer,
+            string workBreakdownStructure,
+            string manufacturerPartNo,
+            string? deliveryDate)
+        {
+            MaterialNumber = materialNumber;
+            MaterialName = materialName;
+            TraceabilityCode = traceabilityCode;
+            DocRefTraceabilitySpecificationForSuppliers = docRefTraceabilitySpecificationForSuppliers;
+            OutlineAgreementNumber = outlineAgreementNumber;
+            BasicDataTexts = basicDataTexts;
+            Manufacturer = manufacturer;
+            WorkBreakdownStructure = workBreakdownStructure;
+            ManufacturerPartNo = manufacturerPartNo;
+            DeliveryDate = deliveryDate;
+        }
     }
 
     /// <summary>
@@ -245,21 +425,38 @@
     public record BasicDataText
     {
         // Gets the delivery requirement expiry date text.
-        public string DeliveryRequirementExpiryDate { get; } = string.Empty;
+        public string DeliveryRequirementExpiryDate { get; }
 
         // Gets the Seal SQ name.
-        public string SealSQName { get; } = string.Empty;
+        public string SealSQName { get; }
 
         // Gets the Seal SQ description.
-        public string SealSQDescription { get; } = string.Empty;
+        public string SealSQDescription { get; }
 
         // Gets the Seal Engineering part number.
-        public string SealEngineeringPartNumber { get; } = string.Empty;
+        public string SealEngineeringPartNumber { get; }
 
         // Gets the T-seal value.
-        public string TSeal { get; } = string.Empty;
+        public string TSeal { get; }
 
         // Gets the anti-extrusion rings value.
-        public string AntiExtrusionRings { get; } = string.Empty;
+        public string AntiExtrusionRings { get; }
+
+        // Constructor.
+        public BasicDataText(
+            string deliveryRequirementExpiryDate,
+            string sealSQName,
+            string sealSQDescription,
+            string sealEngineeringPartNumber,
+            string tSeal,
+            string antiExtrusionRings)
+        {
+            DeliveryRequirementExpiryDate = deliveryRequirementExpiryDate;
+            SealSQName = sealSQName;
+            SealSQDescription = sealSQDescription;
+            SealEngineeringPartNumber = sealEngineeringPartNumber;
+            TSeal = tSeal;
+            AntiExtrusionRings = antiExtrusionRings;
+        }
     }
 }
