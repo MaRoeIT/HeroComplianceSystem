@@ -2,25 +2,25 @@
 using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DataMapping.Models;
 
-namespace Company.App.Application.UseCases.DataMapping.MaterialDocumentationPackage
+namespace Company.App.Application.UseCases.DataMapping.OneSubSea
 {
     /// <summary>
-    /// Maps extracted Material Documentation Package documents
+    /// Maps extracted Administrative Requirements documents
     /// into a structured payload.
     /// </summary>
-    public class MaterialDocumentationPackageDocumentMapper : IDocumentMapper
+    public class AdministrativeRequirementsDocumentMapper : IDocumentMapper
     {
         /// <summary>
         /// Gets the document type supported by this mapper.
         /// </summary>
-        public DocumentType SupportedType => DocumentType.MaterialDocumentationPackage;
+        public DocumentType SupportedType => DocumentType.AdministrativeRequirements;
 
         public object Map(ExtractedDocumentDto document)
         {
-            // Placeholder mapping result until full MDP mapping logic is implemented.
+            // Placeholder mapping result until full AR mapping logic is implemented.
             return new
             {
-                Message = "MDP mapper reached!"
+                Message = "AR mapper reached!"
             };
         }
     }

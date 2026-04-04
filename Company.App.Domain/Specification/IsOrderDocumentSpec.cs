@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text.RegularExpressions;
 
 namespace Company.App.Domain.Specification
 {
@@ -33,5 +31,7 @@ namespace Company.App.Domain.Specification
         /// <returns>True when the text matches an administrative requirements pattern; otherwise false.</returns>
         public bool IsAdministrativeRequirements(string documentTitle) =>
             documentTitle.Contains("Administrative Requirements", StringComparison.OrdinalIgnoreCase);
+
+        public bool IsNumerig
     }
 }

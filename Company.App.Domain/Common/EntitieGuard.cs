@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text.RegularExpressions;
 
 namespace Company.App.Domain.Common
 {
@@ -24,6 +22,16 @@ namespace Company.App.Domain.Common
         }
         // usage: OrderNumber = orderNumber.Required(nameof(OrderNumber), "Document Type");
 
+        public static string MustBeNumeric(string value, string fieldName)
+        {
+            bool isNumeric = Regex.IsMatch(value, @"^\d+$");
+
+            if (!isNumeric)
+                throw new ArgumentException($"{fieldName} must be numeric");
+
+            return value;
+        }
+        
 
     }
 }
