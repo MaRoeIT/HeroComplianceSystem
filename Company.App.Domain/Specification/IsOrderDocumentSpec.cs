@@ -32,6 +32,6 @@ namespace Company.App.Domain.Specification
         public bool IsAdministrativeRequirements(string documentTitle) =>
             documentTitle.Contains("Administrative Requirements", StringComparison.OrdinalIgnoreCase);
 
-        public bool IsNumerig
+        public bool IsNumeric;
     }
 }

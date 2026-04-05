@@ -1,9 +1,11 @@
 ﻿using Company.App.Application.Interfaces;
 using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DataMapping.Models;
+using Company.App.Domain.Entities.OneSubSea;
+using System.Diagnostics.Metrics;
 using static Company.App.Application.UseCases.DataMapping.Services.ExtractedDocumentSearch;
 
-namespace Company.App.Application.UseCases.DataMapping.PurchaseOrder
+namespace Company.App.Application.UseCases.DataMapping.OneSubSea
 {
     /// <summary>
     /// Maps extracted Purchase Order documents
@@ -17,23 +19,25 @@ namespace Company.App.Application.UseCases.DataMapping.PurchaseOrder
         public object Map(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
-
-            var orderNumber = GetNumericValueByLengthFromSingleLineByKeyWordByPage(
-                lines, "PO No", 1, 8, 10);
-            var orderDate = GetDateValueByDDdotMMdotYYYYByPage(lines, "Date Created", 1);
+            var firstPageLines = GetLinesOnPage(lines, 1);
+            
+            var orderNumber = GetValueByLineAndPattern(firstPageLines, "PO No", 1, 8, 12);
+            var orderDate = GetValueByLineAndPattern(firstPageLines, "Date Created", 4);
+            
             var header = MapHeader(lines);
             var overhead = MapOverhead(lines);
-            var items = MapItems(lines, words);
+            var items = MapItems(lines);
 
-       
             int pageNumbers = GetNumbersofPagesInFile(lines);
-            var linesTotal = GetLinesFromTargetLineByPage(lines, "Total Amount", pageNumbers - 1, 2);
-            var linesNet = GetLinesFromTargetLineByPage(lines, "Net Value", pageNumbers - 1, 1);
+            var netAndTotalPage = GetLinesOnPage(lines, pageNumbers - 1);
 
-            var totalNetValue = GetPriceFormatValueFromLinesByRegEx(linesTotal);
-            var totalAmount = GetPriceFormatValueFromLinesByRegEx(linesNet);
+            var linesNet = GetLinesFromTargetLine(netAndTotalPage, "Net Value", 2);
+            var totalNetValue = GetValueByLineAndPattern(linesNet, "Net Value", 2);
 
-            return new Company.App.Domain.Entities.OneSubSea.PurchaseOrder(
+            var linesTotal = GetLinesFromTargetLine(netAndTotalPage, "Total Amount", 2);
+            var totalAmount = GetValueByLineAndPattern(linesTotal, "Total Amount", 2);
+
+            return new PurchaseOrder(
                 orderNumber,
                 orderDate,
                 header,
@@ -49,38 +53,141 @@ namespace Company.App.Application.UseCases.DataMapping.PurchaseOrder
 
             var seller = MapSeller(lines);
             var buyer = MapBuyer(lines);
-            var vendorAddress = MapAddress(lines);
-            var invoiceAddress = MapAddress(lines);
+            var vendorAddress = MapVendorAddress(lines);
+            var invoiceAddress = MapInvoiceAddress(lines);
             var deliveryAddress = MapDeliveryAddress(lines);
+
+            return new PurchaseOrderHeader(
+                seller,
+                buyer,
+                vendorAddress,
+                invoiceAddress,
+                deliveryAddress);
         }
 
         public object MapSeller(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
+            var firstPageLines = GetLinesOnPage(lines, 1);
 
-            var purchaseOrderNumber = GetNumericValueByLengthFromSingleLineByKeyWordByPage(
-                lines, "PO No", 1, 8, 10);
+            var purchaseOrderNumber = GetValueByLineAndPattern(firstPageLines, "PO No", 1, 8, 12);
 
-            var vendorNumber = GetNumericValueByLengthFromSingleLineByKeyWordByPage(
-                lines, "Vendor No", 1, 5, 8);
+            var vendorNumber = GetValueByLineAndPattern(firstPageLines, "Vendor No", 1, 5, 10);
 
-            var faxNumber = "+" + GetNumericValueByLengthFromSingleLineByKeyWordByPage(
-                lines, "Vendor Fax No", 1, 8, 12);
+            var faxNumber = "+" + GetValueByLineAndPattern(firstPageLines, "Vendor Fax No", 1, 9, 15);
 
-            var email =
+            var email = GetValueByLineAndPattern(firstPageLines, "Vendor email", 3);
 
-            var contactPerson =
+            var vendorContact = GetValueByLineAndPattern(firstPageLines, "Vendor Contact", 5, start: "Vendor Contact", end: "Confirmation");
 
-            var frameAgreement =
+            var frameAgreement = GetValueByLineAndPattern(firstPageLines, "Your ref", 5, start: "Your ref", end: "Our");
 
-            var incoTerms =
+            var incoTerms = GetValueByLineAndPattern(firstPageLines, "Inco Terms", 5, start: "Inco Terms", end: "Payment");
 
-            var incoTermsDescription =
+            var incoTermsDescription = GetValueByLineAndPattern(firstPageLines, "Incoterms desc", 5, start: "Incoterms desc", end: "Technical");
 
-            var majorMinor = 
+            var majorMinor = GetValueByLineAndPattern(firstPageLines, "Major/Minor PO", 5, start: "Major/Minor PO", end: "QS");
 
-            var intercompany = 
+            var intercompany = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Intercompany PO").Text, -1);
 
+            return new Seller(
+                purchaseOrderNumber,
+                vendorNumber,
+                faxNumber,
+                email,
+                vendorContact,
+                frameAgreement,
+                incoTerms,
+                incoTermsDescription,
+                majorMinor,
+                intercompany);
         }
+
+        public object MapBuyer(ExtractedDocumentDto document)
+        {
+            var lines = document.Lines;
+            var firstPageLines = GetLinesOnPage(lines, 1);
+
+            var revisionNumber = GetValueByLineAndPattern(firstPageLines, "Rev No", 1, 1, 3);
+
+            var dateCreated = GetValueByLineAndPattern(firstPageLines, "Date Created", 4);
+
+            var currency = GetValueByLineAndPattern(firstPageLines, "Currency", 5, start: "Currency", end: "$");
+
+            var contactPerson = GetValueByLineAndPattern(firstPageLines, "Buyer/Phone", 5, start: "Buyer/Phone", end: "$");
+
+            var confirmationFax = GetValueByLineAndPattern(firstPageLines, "Confirmation fax", 5, start: "Confirmation fax", end: "$");
+
+            var frameAgreement = GetValueByLineAndPattern(firstPageLines, "Our Reference", 5, start: "Our Reference", end: "$");
+            
+            var paymentTerms = GetValueByLineAndPattern(firstPageLines, "Payment terms", 5, start: "Payment terms", end: "$");
+
+            var technicalContact = GetValueByLineAndPattern(firstPageLines, "Technical Contact", 5, start: "Technical Contact", end: "$");
+
+            var qSResponsible = GetValueByLineAndPattern(firstPageLines, "QS Responsible", 5, start: "QS Responsible", end: "$");
+
+            return new Buyer(
+                revisionNumber,
+                dateCreated,
+                currency,
+                contactPerson,
+                confirmationFax,
+                frameAgreement,
+                paymentTerms,
+                technicalContact,
+                qSResponsible);
+        }
+
+        public object MapVendorAddress(ExtractedDocumentDto document)
+        {
+            var lines = document.Lines;
+            var words = document.Words;
+            var firstPageLines = GetLinesOnPage(lines, 1);
+            var vendorSection = GetLinesFromTargetLine(firstPageLines, "Vendor Address", 3);
+
+            var companies = GetCompaniesListedFromLine(vendorSection.FirstOrDefault());
+            var companyName = companies.FirstOrDefault();
+
+            var streetName = GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 30, 200);
+            RemoveNumbersFromString(streetName);
+
+            var streetNumber = GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 30, 200);
+            RemoveCharFromString(streetNumber);
+
+
+            var postalNumber = GetNthWordInString(vendorSection.Skip(2).Select(l => l.Text).FirstOrDefault(), 1);
+
+            var city = GetNthWordInString(vendorSection.Skip(2).Select(l => l.Text).FirstOrDefault(), 2);
+
+            var country = string.Empty;
+
+            return new Address(
+                companyName,
+                streetName,
+                streetNumber,
+                postalNumber,
+                city,
+                country);
+        }
+
+        public object MapInvoiceAddress(ExtractedDocumentDto document)
+        {
+            var lines = document.Lines;
+            var words = document.Words;
+            var firstPageLines = GetLinesOnPage(lines, 1);
+            var vendorSection = GetLinesFromTargetLine(firstPageLines, "Invoice Address", 4);
+
+            var companies = GetCompaniesListedFromLine(vendorSection.FirstOrDefault());
+            var companyName = companies.LastOrDefault();
+
+            var streetName = GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600);
+            var streetNameFilter = RemoveNumbersFromString(streetName);
+
+            var streetNumber = GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600);
+            var streetNumberFilter = RemoveCharFromString(streetNumber);
+
+            var postalNumber = GetPartOfLineRelativeToX(words, vendorSection.Skip(2).FirstOrDefault(), 300, 450);
+            var postalNumberFilter = RemoveCharFromString(postalNumber, "-");
+        }   
     }
 }
