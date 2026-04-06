@@ -14,7 +14,7 @@
         public PurchaseOrderOverhead Overhead { get; }
 
         // Gets the collection of line items included in the purchase order.
-        public List<PurchaseOrderItem> Items { get; }
+        public IReadOnlyList<PurchaseOrderItem> Items { get; }
 
         // Gets the total net value for the purchase order.
         public string TotalNetValue { get; }
@@ -28,7 +28,7 @@
             string orderDate,
             PurchaseOrderHeader header,
             PurchaseOrderOverhead overhead,
-            List<PurchaseOrderItem> items,
+            IReadOnlyList<PurchaseOrderItem> items,
             string totalNetValue,
             string totalAmount
         ) : base(orderNumber, orderDate)
@@ -272,34 +272,34 @@
     public record PurchaseOrderOverhead
     {
         // Gets the page numbers where this section appears.
-        public List<int> PageNumber { get; }
+        public HashSet<int> PageNumbers { get; }
 
         // Gets the logical section identifier or label.
-        public string Section { get; }
+        public string SectionNumber { get; }
 
         // Gets the title of the section.
         public string Title { get; }
 
         // Gets the free-text content lines belonging to this section.
-        public List<string> Content { get; }
+        public IReadOnlyList<string> Content { get; }
 
         // Gets the bullet-point entries belonging to this section.
-        public List<string> BulletPoints { get; }
+        public IReadOnlyList<string> BulletPoints { get; }
 
         // Gets nested subsections contained within this section.
-        public List<PurchaseOrderOverhead> SubSections { get; }
+        public IReadOnlyList<PurchaseOrderOverhead> SubSections { get; }
 
         // Constructor.
         public PurchaseOrderOverhead(
-            List<int> pageNumber,
-            string section,
+            HashSet<int> pageNumbers,
+            string sectionNumber,
             string title,
-            List<string> content,
-            List<string> bulletPoints,
-            List<PurchaseOrderOverhead> subSections)
+            IReadOnlyList<string> content,
+            IReadOnlyList<string> bulletPoints,
+            IReadOnlyList<PurchaseOrderOverhead> subSections)
         {
-            PageNumber = pageNumber;
-            Section = section;
+            PageNumbers = pageNumbers;
+            SectionNumber = sectionNumber;
             Title = title;
             Content = content;
             BulletPoints = bulletPoints;
@@ -316,10 +316,10 @@
         public string ItemNumber { get; }
 
         // Gets the page numbers where this item appears.
-        public List<int> PageNumber { get; }
+        public HashSet<int> PageNumber { get; }
 
         // Gets the material descriptions associated with this item.
-        public List<MaterialDescription> MaterialDescriptions { get; }
+        public IReadOnlyList<MaterialDescription> MaterialDescriptions { get; }
 
         // Gets the revision value for the item.
         public string Revision { get; }
@@ -339,8 +339,8 @@
         // Constructor.
         public PurchaseOrderItem(
             string itemNumber,
-            List<int> pageNumber,
-            List<MaterialDescription> materialDescriptions,
+            HashSet<int> pageNumber,
+            IReadOnlyList<MaterialDescription> materialDescriptions,
             string revision,
             string quantity,
             string orderUnit,

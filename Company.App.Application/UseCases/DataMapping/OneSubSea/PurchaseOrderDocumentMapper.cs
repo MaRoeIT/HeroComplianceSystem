@@ -4,6 +4,7 @@ using Company.App.Application.UseCases.DataMapping.Models;
 using Company.App.Domain.Entities.OneSubSea;
 using System.Diagnostics.Metrics;
 using static Company.App.Application.UseCases.DataMapping.Services.ExtractedDocumentSearch;
+using static System.Net.WebRequestMethods;
 
 namespace Company.App.Application.UseCases.DataMapping.OneSubSea
 {
@@ -24,9 +25,9 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
             var orderNumber = GetValueByLineAndPattern(firstPageLines, "PO No", 1, 8, 12);
             var orderDate = GetValueByLineAndPattern(firstPageLines, "Date Created", 4);
             
-            var header = MapHeader(lines);
-            var overhead = MapOverhead(lines);
-            var items = MapItems(lines);
+            var header = MapHeader(document);
+            var overhead = MapOverhead(document);
+            var items = MapItems(document);
 
             int pageNumbers = GetNumbersofPagesInFile(lines);
             var netAndTotalPage = GetLinesOnPage(lines, pageNumbers - 1);
@@ -51,11 +52,11 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
         {
             var lines = document.Lines;
 
-            var seller = MapSeller(lines);
-            var buyer = MapBuyer(lines);
-            var vendorAddress = MapVendorAddress(lines);
-            var invoiceAddress = MapInvoiceAddress(lines);
-            var deliveryAddress = MapDeliveryAddress(lines);
+            var seller = MapSeller(document);
+            var buyer = MapBuyer(document);
+            var vendorAddress = MapVendorAddress(document);
+            var invoiceAddress = MapInvoiceAddress(document);
+            var deliveryAddress = MapDeliveryAddress(document);
 
             return new PurchaseOrderHeader(
                 seller,
@@ -65,7 +66,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
                 deliveryAddress);
         }
 
-        public object MapSeller(ExtractedDocumentDto document)
+        public Seller MapSeller(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
             var firstPageLines = GetLinesOnPage(lines, 1);
@@ -103,7 +104,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
                 intercompany);
         }
 
-        public object MapBuyer(ExtractedDocumentDto document)
+        public Buyer MapBuyer(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
             var firstPageLines = GetLinesOnPage(lines, 1);
@@ -138,7 +139,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
                 qSResponsible);
         }
 
-        public object MapVendorAddress(ExtractedDocumentDto document)
+        public Address MapVendorAddress(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
             var words = document.Words;
@@ -170,7 +171,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
                 country);
         }
 
-        public object MapInvoiceAddress(ExtractedDocumentDto document)
+        public Address MapInvoiceAddress(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
             var words = document.Words;
@@ -180,14 +181,97 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
             var companies = GetCompaniesListedFromLine(vendorSection.FirstOrDefault());
             var companyName = companies.LastOrDefault();
 
-            var streetName = GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600);
-            var streetNameFilter = RemoveNumbersFromString(streetName);
+            var streetName = RemoveNumbersFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600));
 
-            var streetNumber = GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600);
-            var streetNumberFilter = RemoveCharFromString(streetNumber);
+            var streetNumber = RemoveCharFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600));
 
-            var postalNumber = GetPartOfLineRelativeToX(words, vendorSection.Skip(2).FirstOrDefault(), 300, 450);
-            var postalNumberFilter = RemoveCharFromString(postalNumber, "-");
-        }   
+            var postalNumber = RemoveCharFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(2).FirstOrDefault(), 300, 450));
+
+            var city = RemoveNumbersFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(2).FirstOrDefault(), 300, 600), "-");
+
+            var country = GetPartOfLineRelativeToX(words, vendorSection.Skip(3).FirstOrDefault(), 300, 600);
+
+            return new Address(
+                companyName,
+                streetName,
+                streetNumber,
+                postalNumber,
+                city,
+                country);
+        }
+
+        public DeliveryAddress MapDeliveryAddress(ExtractedDocumentDto document)
+        {
+            var lines = document.Lines;
+            var words = document.Words;
+            var firstPageLines = GetLinesOnPage(lines, 1);
+            var deliverySection = GetLinesFromTargetLine(firstPageLines, "Delivery Address", 7);
+
+            var companyName = deliverySection.Skip(1).Select(l => l.Text).FirstOrDefault();
+            
+            var streetName = RemoveNumbersFromString(deliverySection.Skip(2).Select(l => l.Text).FirstOrDefault());
+            
+            var streetNumber = RemoveCharFromString(deliverySection.Skip(2).Select(l => l.Text).FirstOrDefault());
+
+            var postalNumber = RemoveCharFromString(deliverySection.Skip(5).Select(l => l.Text).FirstOrDefault());
+
+            var city = RemoveNumbersFromString(deliverySection.Skip(4).Select(l => l.Text).FirstOrDefault(), "-");
+
+            var country = deliverySection.Skip(6).Select(l => l.Text).FirstOrDefault();
+
+            var customerType = deliverySection.Select(l => l.Text).FirstOrDefault();
+
+            return new DeliveryAddress(
+                companyName,
+                streetName,
+                streetNumber,
+                postalNumber,
+                city,
+                country,
+                customerType);
+        }
+
+        public PurchaseOrderOverhead MapPurchaseOrderOverhead(ExtractedDocumentDto document)
+        {
+            var lines = document.Lines;
+            var words = document.Words;
+
+            IEnumerable<string> targets = new[]
+            {
+                "1. PURCHASE ORDER REVISIONS",
+                "2. PURCHASE ORDER DOCUMENTS",
+                "3. SCOPE OF WORK:",
+                "3.2. DELIVERY DATE",
+                "4. SPECIAL MARKING & PACKING REQUIREMENTS",
+                "5. SPECIAL CONDITIONS OF PURCHASE",
+                "6. SPECIAL ADMINISTRATIVE REQUIREMENTS",
+                "6.2. MDRL",
+                "6.3. BUYER's VAT numbers in EU for shipping to a 3rd Party",
+                "7. CONTACT DETAILS FOR DOCUMENTATION AND COMMUNICATION:"
+            };
+            var targetPages = GetPagesByLineContent(lines, targets);
+            var overHeadContent = GetLinesFromTargetLine(targetPages, "Rev Quantity Order Unit");
+
+            var pageNumber = targetPages.Select(l => l.PageNumber).Distinct().ToList();
+
+            var section = 
+
+            var title = 
+
+            var content = 
+
+            var bulletPoints = 
+
+            var subSections = 
+
+
+            return new PurchaseOrderOverhead(
+                pageNumber,
+                section,
+                title,
+                content,
+                bulletPoints,
+                subSections);
+        }
     }
 }

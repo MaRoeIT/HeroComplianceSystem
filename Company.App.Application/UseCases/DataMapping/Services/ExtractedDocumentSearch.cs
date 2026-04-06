@@ -7,6 +7,41 @@ namespace Company.App.Application.UseCases.DataMapping.Services
     public static class ExtractedDocumentSearch
     {
         /// <summary>
+        /// Filters and returns lines from pages based on whether their text content matches any of the specified target
+        /// strings.
+        /// </summary>
+        /// <remarks>If no valid targets are provided, no pages will be considered matching. The method
+        /// does not modify the input collections.</remarks>
+        /// <param name="lines">The collection of lines to filter. Each line should contain text and a page number.</param>
+        /// <param name="targets">The set of target strings to search for within each line's text. Null, empty, or whitespace-only targets are
+        /// ignored.</param>
+        /// <param name="includeMatchingPages">If set to <see langword="true"/>, returns lines from pages containing at least one matching line; otherwise,
+        /// returns lines from pages without any matches. The default is <see langword="true"/>.</param>
+        /// <returns>An ordered collection of lines from pages that either contain or do not contain any of the target strings,
+        /// depending on the value of <paramref name="includeMatchingPages"/>. The result is ordered by page number
+        /// ascending and Y coordinate descending.</returns>
+        public static IEnumerable<ExtractedLineDto> GetPagesByLineContent(IEnumerable<ExtractedLineDto> lines, IEnumerable<string> targets, bool includeMatchingPages = true)
+        {
+            var validTargets = targets
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .ToList();
+
+            var targetPages = lines
+                .Where(l => validTargets.Any(t => l.Text.Contains(t)))
+                .Select(l => l.PageNumber)
+                .Distinct()
+                .ToHashSet();
+
+            return lines
+                .Where(l => includeMatchingPages
+                    ? targetPages.Contains(l.PageNumber)
+                    : !targetPages.Contains(l.PageNumber))
+                .OrderBy(l => l.PageNumber)
+                .ThenByDescending(l => l.Y)
+                .ToList();
+        }
+
+        /// <summary>
         /// Retrieves the collection of lines that appear on the specified page, ordered from top to bottom and then
         /// left to right.
         /// </summary>
@@ -24,38 +59,99 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         }
 
         /// <summary>
-        /// Retrieves the target line containing the specified text and a specified number of subsequent lines from a
-        /// given page.
+        /// Returns a collection of extracted lines that appear on pages within the specified range, ordered by page
+        /// number and position.
         /// </summary>
-        /// <remarks>Lines are ordered from top to bottom and left to right as they appear on the page.
-        /// The target line is always included in the result. If there are fewer lines following the target line than
-        /// requested, only the available lines are returned.</remarks>
-        /// <param name="lines">The collection of extracted lines to search within. Each line must include page and position information.</param>
-        /// <param name="target">The text to search for within the lines. The method returns the first line containing this text and the
-        /// following lines.</param>
-        /// <param name="pageNumber">The page number to filter lines by. Only lines from this page are considered.</param>
-        /// <param name="followingLines">The number of lines to include after the target line. Must be zero or greater.</param>
-        /// <returns>An enumerable collection of lines starting with the first line containing the target text on the specified
-        /// page, followed by the specified number of subsequent lines. If the target text is not found, the collection
-        /// will be empty.</returns>
-        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLine(IEnumerable<ExtractedLineDto> lines, string target, int followingLines, bool includeTargetLine = false)
+        /// <remarks>If no lines are found within the specified page range, the returned collection will
+        /// be empty.</remarks>
+        /// <param name="lines">The collection of extracted lines to filter and order.</param>
+        /// <param name="fromPage">The first page number in the inclusive range of pages to include. Must be less than or equal to <paramref
+        /// name="toPage"/>.</param>
+        /// <param name="toPage">The last page number in the inclusive range of pages to include. Must be greater than or equal to <paramref
+        /// name="fromPage"/>.</param>
+        /// <returns>An ordered collection of <see cref="ExtractedLineDto"/> objects that are located on pages from <paramref
+        /// name="fromPage"/> to <paramref name="toPage"/>, inclusive. The collection is ordered first by page number,
+        /// then by vertical position (Y), and then by horizontal position (X).</returns>
+        public static IEnumerable<ExtractedLineDto> GetLinesOnPages(IEnumerable<ExtractedLineDto> lines, int fromPage, int toPage)
         {
-            var pageLines = lines
-                .OrderByDescending(l => l.Y)
+            return lines
+                .Where(l => l.PageNumber >= fromPage && l.PageNumber <= toPage)
+                .OrderBy(l => l.PageNumber)
+                .ThenByDescending(l => l.Y)
                 .ThenBy(l => l.X)
                 .ToList();
+        }
 
-            var startIndex = pageLines.FindIndex(l => l.Text.Contains(target));
-
-            if (startIndex == -1)
+        /// <summary>
+        /// Retrieves lines from a collection of PDF lines that follow the first occurrence of a line containing the
+        /// specified target text, optionally including the target line itself.
+        /// </summary>
+        /// <remarks>Lines are grouped and processed by page, ordered by descending Y coordinate and
+        /// ascending X coordinate within each page. Only the first occurrence of the target text per page is
+        /// considered.</remarks>
+        /// <param name="lines">The collection of PDF lines to search. Lines are grouped and processed by page number.</param>
+        /// <param name="target">The text to search for within each line's content. The first line containing this text is used as the
+        /// target.</param>
+        /// <param name="followingLines">The number of lines to return after the target line. Must be zero or greater. If zero, all lines after the
+        /// target (or including the target, if specified) are returned.</param>
+        /// <param name="includeTargetLine">true to include the target line in the results; otherwise, false.</param>
+        /// <returns>An enumerable collection of PDF lines following the target line, optionally including the target line
+        /// itself. Returns an empty collection if the target text is not found or if the input collection is null.</returns>
+        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLine(IEnumerable<ExtractedLineDto> lines, string target, int followingLines = 0, bool includeTargetLine = false)
+        {
+            if (lines == null)
                 return Enumerable.Empty<ExtractedLineDto>();
 
-            int skip = includeTargetLine ? startIndex : startIndex + 1;
-            int take = includeTargetLine ? followingLines + 1 : followingLines;
+            var result = lines
+                .GroupBy(l => l.PageNumber)
+                .OrderBy(g => g.Key)
+                .SelectMany(pageGroup =>
+                {
+                    var pageLines = pageGroup
+                        .OrderByDescending(l => l.Y)
+                        .ThenBy(l => l.X)
+                        .ToList();
 
-            return pageLines
-                .Skip(skip)
-                .Take(take)
+                    var startIndex = pageLines.FindIndex(l => l.Text.Contains(target));
+
+                    if (startIndex == -1)
+                        return Enumerable.Empty<ExtractedLineDto>();
+
+                    int skip = includeTargetLine ? startIndex : startIndex + 1;
+
+                    var query = pageLines.Skip(skip);
+
+                    if (followingLines > 0)
+                    {
+                        int take = includeTargetLine ? followingLines + 1 : followingLines;
+                        query = query.Take(take);
+                    }
+
+                    return query;
+                });
+
+            return result.ToList();
+        }
+
+        /// <summary>
+        /// Returns the collection of words from the specified line that are within a given vertical tolerance.
+        /// </summary>
+        /// <remarks>This method is useful for grouping words into lines when processing PDF text
+        /// extraction, where minor Y coordinate variations may occur due to rendering or extraction
+        /// differences.</remarks>
+        /// <param name="words">The collection of words to filter. Each word must have page and position information.</param>
+        /// <param name="line">The line model used to determine which words belong to the line. Must not be null.</param>
+        /// <param name="yTolerance">The maximum allowed difference in the Y coordinate, in points, between a word and the line for the word to
+        /// be considered part of the line. Defaults to 2.0.</param>
+        /// <returns>An ordered collection of words that are on the same page and within the specified vertical tolerance of the
+        /// line, sorted by their X coordinate. The collection is empty if no words match.</returns>
+        public static IEnumerable<ExtractedWordDto> GetWordsFromLine(IEnumerable<ExtractedWordDto> words, ExtractedLineDto line, double yTolerance = 2.0)
+        {
+            return words
+                .Where(w =>
+                    w.PageNumber == line.PageNumber &&
+                    Math.Abs(w.Y - line.Y) <= yTolerance)
+                .OrderBy(w => w.X)
                 .ToList();
         }
 
@@ -97,29 +193,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .FirstOrDefault(l =>
                 l.Text.Contains(text, StringComparison.OrdinalIgnoreCase));
         }
-
-        /// <summary>
-        /// Returns the collection of words from the specified line that are within a given vertical tolerance.
-        /// </summary>
-        /// <remarks>This method is useful for grouping words into lines when processing PDF text
-        /// extraction, where minor Y coordinate variations may occur due to rendering or extraction
-        /// differences.</remarks>
-        /// <param name="words">The collection of words to filter. Each word must have page and position information.</param>
-        /// <param name="line">The line model used to determine which words belong to the line. Must not be null.</param>
-        /// <param name="yTolerance">The maximum allowed difference in the Y coordinate, in points, between a word and the line for the word to
-        /// be considered part of the line. Defaults to 2.0.</param>
-        /// <returns>An ordered collection of words that are on the same page and within the specified vertical tolerance of the
-        /// line, sorted by their X coordinate. The collection is empty if no words match.</returns>
-        public static IEnumerable<ExtractedWordDto> GetWordsFromLine(IEnumerable<ExtractedWordDto> words, ExtractedLineDto line, double yTolerance = 2.0)
-        {
-            return words
-                .Where(w =>
-                    w.PageNumber == line.PageNumber &&
-                    Math.Abs(w.Y - line.Y) <= yTolerance)
-                .OrderBy(w => w.X)
-                .ToList();
-        }
-
+                
         /// <summary>
         /// Finds the first word in the collection that matches the specified width, ordered by descending Y coordinate
         /// and then ascending X coordinate.
@@ -170,7 +244,6 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return companies;
         }
 
-
         /// <summary>
         /// Retrieves the text that appears immediately after the specified label in the first line containing that
         /// label.
@@ -196,6 +269,17 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return line.Text[(index + label.Length)..].Trim(' ', ':', '-');
         }
 
+        /// <summary>
+        /// Returns the concatenated text of words within the specified horizontal range in the given line.
+        /// </summary>
+        /// <param name="wordsList">The collection of extracted words to search within.</param>
+        /// <param name="line">The line from which to extract words based on their horizontal position.</param>
+        /// <param name="start">The inclusive minimum X-coordinate value. Only words with an X position greater than or equal to this value
+        /// are included.</param>
+        /// <param name="end">The inclusive maximum X-coordinate value. Only words with an X position less than or equal to this value are
+        /// included.</param>
+        /// <returns>A string containing the text of all words in the specified line whose X-coordinate falls within the range
+        /// from start to end, separated by spaces. Returns an empty string if no words match the criteria.</returns>
         public static string GetPartOfLineRelativeToX(IEnumerable<ExtractedWordDto> wordsList, ExtractedLineDto line, int start, int end)
         {
             var words = GetWordsFromLine(wordsList, line);
