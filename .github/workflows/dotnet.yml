@@ -44,4 +44,4 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
       env:
-        ConnectionStrings__DefaultConnection: "Host=localhost;Database=company_app_db;Username=dev_user;Password=123;TrustServerCertificate=True;"
+        ConnectionStrings__DefaultConnection: "Host=localhost;Database=${{ secrets.POSTGRES_DB }};Username=${{ secrets.POSTGRES_USER }};Password=${{ secrets.POSTGRES_PASSWORD }};TrustServerCertificate=True;"
