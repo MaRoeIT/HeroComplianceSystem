@@ -38,10 +38,10 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Company.App.slnx
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build Company.App.slnx --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test Company.App.slnx --no-build --verbosity normal
       env:
         ConnectionStrings__DefaultConnection: "Host=localhost;Database=${{ secrets.POSTGRES_DB }};Username=${{ secrets.POSTGRES_USER }};Password=${{ secrets.POSTGRES_PASSWORD }};TrustServerCertificate=True;"
