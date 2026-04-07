@@ -10,6 +10,18 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include=".env.example" />
+    <None Include="Company.App.Application.Tests\Company.App.Application.Tests.csproj" />
+    <None Include="Company.App.Application.Tests\SampleTest.cs" />
+    <None Include="Company.App.Application.Tests\Usings.cs" />
+    <None Include="Company.App.Domain.Tests\Company.App.Domain.Tests.csproj" />
+    <None Include="Company.App.Domain.Tests\SampleTest.cs" />
+    <None Include="Company.App.Domain.Tests\Usings.cs" />
+    <None Include="Company.App.Infrastructure.Tests\Company.App.Infrastructure.Tests.csproj" />
+    <None Include="Company.App.Infrastructure.Tests\SampleTest.cs" />
+    <None Include="Company.App.Infrastructure.Tests\Usings.cs" />
+    <None Include="Company.App.Web.Tests\Company.App.Web.Tests.csproj" />
+    <None Include="Company.App.Web.Tests\SampleTest.cs" />
+    <None Include="Company.App.Web.Tests\Usings.cs" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>

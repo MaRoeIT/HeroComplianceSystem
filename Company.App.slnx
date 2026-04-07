@@ -1,7 +1,11 @@
 <Solution>
+  <Project Path="Company.App.Application.Tests/Company.App.Application.Tests.csproj" />
   <Project Path="Company.App.Application/Company.App.Application.csproj" />
+  <Project Path="Company.App.Domain.Tests/Company.App.Domain.Tests.csproj" />
   <Project Path="Company.App.Domain/Company.App.Domain.csproj" />
+  <Project Path="Company.App.Infrastructure.Tests/Company.App.Infrastructure.Tests.csproj" />
   <Project Path="Company.App.Infrastructure/Company.App.Infrastructure.csproj" />
+  <Project Path="Company.App.Web.Tests/Company.App.Web.Tests.csproj" />
   <Project Path="Company.App.Web/Company.App.Web.csproj" />
   <Project Path="docker-compose.dcproj">
     <Build />
