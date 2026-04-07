@@ -21,7 +21,7 @@
             <MudText Typo="Typo.h6" Class="mb-4">Upload CSV File</MudText>
 
             <MudFileUpload T="IBrowserFile" @ref="_fileUpload" Accept=".csv" OnFilesChanged="HandleFileSelected" MaximumFileCount="1">
-                <ActivatorContent>
+                <CustomContent>
                     <MudButton Variant="Variant.Filled"
                                 Color="Color.Primary"
                                 StartIcon="@Icons.Material.Filled.CloudUpload"
@@ -30,7 +30,7 @@
                                 FullWidth="true">
                         Select CSV File
                     </MudButton>
-                </ActivatorContent>
+                </CustomContent>
             </MudFileUpload>
 
             @if(_isProcessing)
@@ -88,7 +88,7 @@
 </MudGrid>
 
 @code{
-    private MudFileUpload<IBrowserFile> _fileUpload;
+    private MudFileUpload<IBrowserFile>? _fileUpload;
     private bool _isProcessing = false;
     private Result<DetectionResult>? _result;
     private DetectionResult? _heroResult;

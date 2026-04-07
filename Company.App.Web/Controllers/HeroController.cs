@@ -55,7 +55,7 @@ namespace Company.App.Web.Controllers
         [HttpGet("heroes/{name}")]
         public async Task<ActionResult<Result<HeroByNameResult>>> GetHeroByName(string name)
         {
-            _logger.LogInformation("Heroes/{name} endpoint called");
+            _logger.LogInformation("Heroes/{name} endpoint called", name);
 
             if(string.IsNullOrEmpty(name))
             {
