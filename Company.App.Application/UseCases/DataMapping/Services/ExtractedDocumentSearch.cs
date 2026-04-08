@@ -1,5 +1,9 @@
 ﻿using Company.App.Application.UseCases.DataExtraction.Models;
+using Company.App.Application.UseCases.DataMapping.Models;
+using Company.App.Domain.Entities.OneSubSea;
 using System;
+using System.Text.RegularExpressions;
+using static Company.App.Application.UseCases.DataMapping.Helper.IsBulletLine;
 using static Company.App.Application.UseCases.DataMapping.Services.RegexSearchService;
 
 namespace Company.App.Application.UseCases.DataMapping.Services
@@ -131,6 +135,59 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 });
 
             return result.ToList();
+        }
+
+        /// <summary>
+        /// Returns a sequence of lines between the first occurrence of a start target string and the first subsequent
+        /// occurrence of an end target string within the provided collection.
+        /// </summary>
+        /// <remarks>The method orders the input lines before searching for the target strings. Only the
+        /// first occurrence of each target is considered. If the start target appears after the end target, or if
+        /// either target is not found, the result is empty.</remarks>
+        /// <param name="lines">The collection of lines to search. The lines are expected to contain text and positional information.</param>
+        /// <param name="startTarget">The string to identify the starting line. The search begins at the first line whose text contains this
+        /// value.</param>
+        /// <param name="endTarget">The string to identify the ending line. The search ends at the first line after the start whose text
+        /// contains this value.</param>
+        /// <param name="includeTargets">true to include the lines containing the start and end target strings in the result; otherwise, false.</param>
+        /// <returns>An enumerable collection of lines found between the start and end target lines, ordered by page number, Y,
+        /// and X coordinates. Returns an empty collection if the start or end target is not found, or if the input
+        /// collection is null.</returns>
+        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLineToTargetLine(IEnumerable<ExtractedLineDto> lines, string startTarget, string endTarget, bool includeTargets)
+        {
+            if (lines == null)
+                return Enumerable.Empty<ExtractedLineDto>();
+
+            var result = lines
+                .OrderBy(l => l.PageNumber)
+                .ThenByDescending(l => l.Y)
+                .ThenBy(l => l.X)
+                .ToList();
+
+            var startIndex = result.FindIndex(l => l.Text.Contains(startTarget));
+            if (startIndex == -1)
+                return Enumerable.Empty<ExtractedLineDto>();
+
+            var endIndex = result
+                .Skip(startIndex + 1)
+                .Select((line, index) => new { line, index })
+                .FirstOrDefault(x => x.line.Text.Contains(endTarget));
+
+            if (endIndex == null)
+                return Enumerable.Empty<ExtractedLineDto>();
+
+            int realEndIndex = startIndex + 1 + endIndex.index;
+
+            int from = includeTargets ? startIndex : startIndex + 1;
+            int to = includeTargets ? realEndIndex : realEndIndex - 1;
+
+            if (from > to)
+                return Enumerable.Empty<ExtractedLineDto>();
+
+            return result
+                .Skip(from)
+                .Take(to - from + 1)
+                .ToList();
         }
 
         /// <summary>
@@ -288,6 +345,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .Where(w => w.X >= start && w.X <= end)
                 .Select(w => w.Text));
         }
+
         /// <summary>
         /// Retrieves the nth word from the specified input string.
         /// </summary>
@@ -466,6 +524,162 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return document.Select(d => d.PageNumber)
                 .OrderByDescending(d => d)
                 .FirstOrDefault();
+        }
+
+        //****************************************************
+        //************SPECIALISED SOLUTIONS BELOW*************
+        //****************************************************
+
+        // Pdf numbered sections.
+
+        /// <summary>
+        /// Identifies section headings within a collection of extracted lines and groups the lines into section blocks
+        /// based on those headings.
+        /// </summary>
+        /// <remarks>Lines are grouped into sections based on detected headings, which are determined by
+        /// parsing the text of each line. The input lines are ordered by page number, vertical position, and horizontal
+        /// position before processing. This method is typically used to extract structured sections from documents such
+        /// as PDFs.</remarks>
+        /// <param name="lines">The collection of extracted lines to analyze for section headings and content. Cannot be null.</param>
+        /// <returns>An enumerable collection of section blocks, each containing a section heading and its associated lines.
+        /// Returns an empty collection if no section headings are found or if the input is null.</returns>
+        public static IEnumerable<SectionBlockDto> GetSectionBlocksFromLines(IEnumerable<ExtractedLineDto> lines)
+        {
+            if (lines == null)
+                return Enumerable.Empty<SectionBlockDto>();
+
+            var ordered = lines
+                .OrderBy(l => l.PageNumber)
+                .ThenByDescending(l => l.Y)
+                .ThenBy(l => l.X)
+                .ToList();
+
+            var headings = ordered
+                .Select((line, index) => new
+                {
+                    Index = index,
+                    Section = TryParseSectionFromLine(line.Text)
+                })
+                .Where(x => x.Section != null)
+                .Select(x => new
+                {
+                    x.Index,
+                    Section = x.Section!
+                })
+                .ToList();
+
+            if (headings.Count == 0)
+                return Enumerable.Empty<SectionBlockDto>();
+
+            var result = new List<SectionBlockDto>();
+
+            for (int i = 0; i < headings.Count; i++)
+            {
+                int startIndex = headings[i].Index;
+                int endIndex = (i < headings.Count - 1)
+                    ? headings[i + 1].Index - 1
+                    : ordered.Count - 1;
+
+                var blockLines = ordered
+                    .Skip(startIndex)
+                    .Take(endIndex - startIndex + 1)
+                    .ToList();
+
+                result.Add(new SectionBlockDto(
+                    headings[i].Section,
+                    blockLines));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Separates the provided lines into content lines and bullet point lines, excluding the first line.
+        /// </summary>
+        /// <param name="blockLines">The list of lines to process. The first line is ignored; subsequent lines are classified as either content
+        /// or bullet points based on their format. Cannot be null.</param>
+        /// <returns>A tuple containing two lists: the first list includes content lines, and the second list includes bullet
+        /// point lines. Both lists may be empty if no matching lines are found.</returns>
+        private static (List<string> Content, List<string> BulletPoints) SplitContentAndBullets(List<ExtractedLineDto> blockLines)
+        {
+            var content = new List<string>();
+            var bulletPoints = new List<string>();
+
+            foreach (var line in blockLines.Skip(1))
+            {
+                var text = line.Text?.Trim();
+
+                if (string.IsNullOrWhiteSpace(text))
+                    continue;
+
+                if (IsBullet(text))
+                    bulletPoints.Add(text);
+                else
+                    content.Add(text);
+            }
+
+            return (content, bulletPoints);
+        }
+
+        /// <summary>
+        /// Determines whether the specified child section is a direct child of the given parent section.
+        /// </summary>
+        /// <remarks>A direct child is defined as a section whose name starts with the parent section
+        /// followed by a dot, and has exactly one additional hierarchical level.</remarks>
+        /// <param name="parentSection">The name of the parent section, using dot notation to indicate hierarchy. Cannot be null.</param>
+        /// <param name="childSection">The name of the child section to evaluate, using dot notation to indicate hierarchy. Cannot be null.</param>
+        /// <returns>true if the child section is a direct child of the parent section; otherwise, false.</returns>
+        private static bool IsDirectChild(string parentSection, string childSection)
+        {
+            if (!childSection.StartsWith(parentSection + "."))
+                return false;
+
+            int parentLevel = parentSection.Count(c => c == '.') + 1;
+            int childLevel = childSection.Count(c => c == '.') + 1;
+
+            return childLevel == parentLevel + 1;
+        }
+
+        /// <summary>
+        /// Builds a hierarchical representation of a purchase order overhead section, including its content, bullet
+        /// points, and any nested subsections.
+        /// </summary>
+        /// <remarks>This method recursively processes the provided section blocks to construct a tree
+        /// structure reflecting the document's hierarchy. Only direct child sections of the current section are
+        /// included as subsections.</remarks>
+        /// <param name="current">The section block representing the current section to process. Cannot be null.</param>
+        /// <param name="allBlocks">A list of all section blocks available for constructing the hierarchy. Cannot be null and must contain the
+        /// current section.</param>
+        /// <returns>A PurchaseOrderOverhead object representing the current section and its nested subsections, with associated
+        /// content and bullet points.</returns>
+        private static PurchaseOrderOverhead BuildPurchaseOrderOverhead(SectionBlockDto current, List<SectionBlockDto> allBlocks)
+        {
+            var childBlocks = allBlocks
+                .Where(b => IsDirectChild(current.Section.SectionNumber, b.Section.SectionNumber))
+                .ToList();
+
+            var subSections = childBlocks
+                .Select(child => BuildPurchaseOrderOverhead(child, allBlocks))
+                .ToList();
+
+            var ownBodyLines = current.BlockLines
+                .Skip(1) // skip heading line
+                .Where(line =>
+                {
+                    var parsed = TryParseSectionFromLine(line.Text);
+                    return parsed == null || parsed.Level <= current.Section.Level;
+                })
+                .ToList();
+
+            var split = SplitContentAndBullets(ownBodyLines.Prepend(current.BlockLines.First()).ToList());
+
+            return new PurchaseOrderOverhead(
+                current.BlockLines.Select(l => l.PageNumber).Distinct().ToHashSet(),
+                current.Section.SectionNumber,
+                current.Section.Title,
+                split.Content,
+                split.BulletPoints,
+                subSections);
         }
     }
 }

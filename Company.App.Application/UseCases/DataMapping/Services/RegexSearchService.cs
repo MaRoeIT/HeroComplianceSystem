@@ -1,4 +1,4 @@
-﻿using Company.App.Application.UseCases.DataExtraction.Models;
+﻿using Company.App.Application.UseCases.DataMapping.Models;
 using System.Text.RegularExpressions;
 
 
@@ -116,28 +116,6 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         }
 
         /// <summary>
-        /// Splits a string containing multiple company names into individual company names based on common company
-        /// suffixes.
-        /// </summary>
-        /// <remarks>Company names are identified by matching common suffixes such as AS, LTDA, INC, LTD,
-        /// GMBH, and SA. The method trims whitespace from each extracted company name.</remarks>
-        /// <param name="line">The input string containing one or more company names to be split. Cannot be null.</param>
-        /// <returns>An enumerable collection of company names extracted from the input string. The collection will be empty if
-        /// no company names are found.</returns>
-        public static IEnumerable<string> SplitCompanies(string line)
-        {
-            var pattern = @"(.+?\b(?:AB|AS|LTDA|INC|LTD|GMBH|SA)\b)";
-
-            var matches = Regex.Matches(line, pattern);
-
-            return matches
-                .Cast<Match>()
-                .Select(m => m.Value.Trim())
-                .ToList();
-
-        }
-
-        /// <summary>
         /// Removes all numeric characters from the specified string and trims any leading or trailing whitespace.
         /// </summary>
         /// <param name="text">The input string from which numeric characters will be removed. Can be null or empty.</param>
@@ -210,6 +188,57 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             var pattern = $@"[^\d{escapedIgnore}]+";
 
             return Regex.Replace(text, pattern, "").Trim();
+        }
+
+        /// <summary>
+        /// Splits a string containing multiple company names into individual company names based on common company
+        /// suffixes.
+        /// </summary>
+        /// <remarks>Company names are identified by matching common suffixes such as AS, LTDA, INC, LTD,
+        /// GMBH, and SA. The method trims whitespace from each extracted company name.</remarks>
+        /// <param name="line">The input string containing one or more company names to be split. Cannot be null.</param>
+        /// <returns>An enumerable collection of company names extracted from the input string. The collection will be empty if
+        /// no company names are found.</returns>
+        public static IEnumerable<string> SplitCompanies(string line)
+        {
+            var pattern = @"(.+?\b(?:AB|AS|LTDA|INC|LTD|GMBH|SA)\b)";
+
+            var matches = Regex.Matches(line, pattern);
+
+            return matches
+                .Cast<Match>()
+                .Select(m => m.Value.Trim())
+                .ToList();
+
+        }
+
+        /// <summary>
+        /// Attempts to parse a section header from the specified text line and returns a corresponding SectionDto if
+        /// successful.
+        /// </summary>
+        /// <remarks>The method expects the input to start with a section number (e.g., "1.", "2.1.")
+        /// followed by a title. Trailing colons in the title are removed. Returns null if the input is null, empty, or
+        /// does not match the expected pattern.</remarks>
+        /// <param name="text">The text line to parse. Expected to contain a section number followed by a title (e.g., "1.2.3. Section
+        /// Title").</param>
+        /// <returns>A SectionDto representing the parsed section if the text matches the expected format; otherwise, null.</returns>
+        public static SectionDto? TryParseSectionFromLine(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return null;
+
+            string pattern = @"^(?<number>\d+(?:\.\d+)*)\.\s*(?<title>.+?)\s*$";
+
+            var match = Regex.Match(text, pattern);
+
+            if (!match.Success)
+                return null;
+
+            var sectionNumber = match.Groups["number"].Value;
+            var title = match.Groups["title"].Value.Trim().TrimEnd(':');
+            var level = sectionNumber.Count(c => c == '.') + 1;
+
+            return new SectionDto(sectionNumber, title, level);
         }
     }
 }

@@ -2,6 +2,7 @@ using Company.App.Application.Interfaces;
 using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataMapping;
 using Company.App.Application.UseCases.DataMapping.OneSubSea;
+using Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument;
 using Company.App.Application.UseCases.DataMapping.PurchaseOrder;
 using Company.App.Application.UseCases.DetectBatman;
 using Company.App.Domain.Specification;
@@ -36,7 +37,7 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<IsOrderDocumentSpec>();
 builder.Services.AddScoped<IDocumentTypeDecider, DocumentTypeDecider>();
 builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();
-builder.Services.AddScoped<IDocumentMapper, PurchaseOrderDocumentMapper>();
+builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>();
 builder.Services.AddScoped<IDocumentMapper, MaterialDocumentationPackageDocumentMapper>();
 builder.Services.AddScoped<IDocumentMapper, AdministrativeRequirementsDocumentMapper>();
 

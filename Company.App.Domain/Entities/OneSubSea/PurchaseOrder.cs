@@ -11,7 +11,7 @@
 
         // Gets the overhead section content of the purchase order,
         // such as general document sections and free-text blocks.
-        public PurchaseOrderOverhead Overhead { get; }
+        public IReadOnlyList<PurchaseOrderOverhead> Overhead { get; }
 
         // Gets the collection of line items included in the purchase order.
         public IReadOnlyList<PurchaseOrderItem> Items { get; }
@@ -27,7 +27,7 @@
             string orderNumber,
             string orderDate,
             PurchaseOrderHeader header,
-            PurchaseOrderOverhead overhead,
+            IReadOnlyList<PurchaseOrderOverhead> overhead,
             IReadOnlyList<PurchaseOrderItem> items,
             string totalNetValue,
             string totalAmount
