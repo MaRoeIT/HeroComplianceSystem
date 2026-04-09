@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Company.App.Application.Interfaces
 {
-    internal interface IMaterialDocumentationPackageHeaderMapper
+    public interface IMaterialDocumentationPackageHeaderMapper
     {
     }
 }
