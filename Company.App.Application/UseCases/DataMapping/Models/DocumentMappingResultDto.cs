@@ -15,6 +15,6 @@ namespace Company.App.Application.UseCases.DataMapping.Models
         public ExtractedDocumentDto? ExtractedDocument { get; set; }
 
         // The mapped business payload produced by the selected document mapper.
-        public object? PayLoad { get; set; }
+        public object? MappedPayload { get; set; }
     }
 }

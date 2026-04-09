@@ -39,7 +39,7 @@ namespace Company.App.Application.UseCases.DataMapping
                 {
                     DocumentType = documentType,
                     ExtractedDocument = document,
-                    PayLoad = null
+                    MappedPayload = null
                 };
             }
 
@@ -49,7 +49,7 @@ namespace Company.App.Application.UseCases.DataMapping
             {
                 DocumentType = documentType,
                 ExtractedDocument = document,
-                PayLoad = mapper.Map(document)
+                MappedPayload = mapper.Map(document)
             };
         }
 

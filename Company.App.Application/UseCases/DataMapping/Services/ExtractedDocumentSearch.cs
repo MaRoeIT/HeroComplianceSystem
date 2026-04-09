@@ -1,10 +1,13 @@
-﻿using Company.App.Application.UseCases.DataExtraction.Models;
+﻿using Company.App.Application.Shared;
+using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DataMapping.Models;
 using Company.App.Domain.Entities.OneSubSea;
 using System;
 using System.Text.RegularExpressions;
-using static Company.App.Application.UseCases.DataMapping.Helper.IsBulletLine;
 using static Company.App.Application.UseCases.DataMapping.Services.RegexSearchService;
+using static Company.App.Application.UseCases.DataMapping.Helper.IsBulletLine;
+using static Company.App.Application.UseCases.DataMapping.Helper.IsItemLine;
+using static Company.App.Application.UseCases.DataMapping.Helper.IsPriceFormatValues;
 
 namespace Company.App.Application.UseCases.DataMapping.Services
 {
@@ -138,6 +141,73 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         }
 
         /// <summary>
+        /// Returns a collection of lines that follow each target line within the specified input, optionally including
+        /// the target lines themselves.
+        /// </summary>
+        /// <remarks>Lines are grouped and processed by page number, and ordering is determined by Y
+        /// (descending) and X (ascending) coordinates. Duplicate lines in the result are removed. Only target lines
+        /// with non-empty text are considered for matching.</remarks>
+        /// <param name="lines">The sequence of lines to search for target matches and extract following lines from. Cannot be null.</param>
+        /// <param name="targets">The sequence of target lines whose text is used to identify matches within the input lines. Only targets
+        /// with non-empty text are considered. Cannot be null.</param>
+        /// <param name="followingLines">The number of lines to include after each matched target line. Must be zero or greater.</param>
+        /// <param name="includeTargetLine">true to include the target line itself in the result; otherwise, false.</param>
+        /// <returns>An enumerable collection of lines that follow each matched target line, optionally including the target
+        /// lines. Returns an empty collection if no matches are found or if the input sequences are null.</returns>
+        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLines(IEnumerable<ExtractedLineDto> lines, IEnumerable<ExtractedLineDto> targets, int followingLines = 0, bool includeTargetLine = false)
+        {
+            if (lines == null || targets == null)
+                return Enumerable.Empty<ExtractedLineDto>();
+
+            var targetList = targets
+                .Where(t => !string.IsNullOrWhiteSpace(t.Text))
+                .ToList();
+
+            if (!targetList.Any())
+                return Enumerable.Empty<ExtractedLineDto>();
+
+            var result = lines
+                .GroupBy(l => l.PageNumber)
+                .OrderBy(g => g.Key)
+                .SelectMany(pageGroup =>
+                {
+                    var pageLines = pageGroup
+                        .OrderByDescending(l => l.Y)
+                        .ThenBy(l => l.X)
+                        .ToList();
+
+                    var collected = new List<ExtractedLineDto>();
+
+                    for (int i = 0; i < pageLines.Count; i++)
+                    {
+                        bool isMatch = targetList.Any(target => pageLines[i].Text.Contains(target.Text));
+
+                        if (!isMatch)
+                            continue;
+
+                        int startIndex = includeTargetLine ? i : i + 1;
+
+                        if (startIndex >= pageLines.Count)
+                            continue;
+
+                        IEnumerable<ExtractedLineDto> selection = pageLines.Skip(startIndex);
+
+                        if (followingLines > 0)
+                        {
+                            int take = includeTargetLine ? followingLines + 1 : followingLines;
+                            selection = selection.Take(take);
+                        }
+
+                        collected.AddRange(selection);
+                    }
+
+                    return collected;
+                });
+
+            return result.Distinct().ToList();
+        }
+
+        /// <summary>
         /// Returns a sequence of lines between the first occurrence of a start target string and the first subsequent
         /// occurrence of an end target string within the provided collection.
         /// </summary>
@@ -210,6 +280,44 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                     Math.Abs(w.Y - line.Y) <= yTolerance)
                 .OrderBy(w => w.X)
                 .ToList();
+        }
+
+        public static IEnumerable<ExtractedWordDto> GetWordsFromLines(IEnumerable<ExtractedWordDto> words, IEnumerable<ExtractedLineDto> lines, double yTolerance = 2.0)
+        {
+            if (words == null || lines == null)
+                return Enumerable.Empty<ExtractedWordDto>();
+
+            return lines
+                .SelectMany(l => words
+                    .Where(w =>
+                        w.PageNumber == l.PageNumber &&
+                        Math.Abs(w.Y - l.Y) <= yTolerance))
+                .OrderBy(w => w.PageNumber)
+                .ThenByDescending(w => w.Y)
+                .ThenBy(w => w.X)
+                .ToList();
+        }
+
+        public static IEnumerable<ExtractedWordDto> GetNthWordInLines(IEnumerable<ExtractedWordDto> words, IEnumerable<ExtractedLineDto> lines, int n, double yTolerance = 2.0)
+        {
+            if (words == null || lines == null || n < 1)
+                return Enumerable.Empty<ExtractedWordDto>();
+
+            return lines
+                .Select(line =>
+                {
+                    var lineWords = words
+                        .Where(w =>
+                            w.PageNumber == line.PageNumber &&
+                            Math.Abs(w.Y - line.Y) <= yTolerance &&
+                            w.X >= line.X &&
+                            w.X <= line.X + line.Width)
+                        .OrderBy(w => w.X)
+                        .ToList();
+
+                    return lineWords.Count >= n ? lineWords[n - 1] : null;
+                })
+                .Where(w => w != null)!;
         }
 
         /// <summary>
@@ -301,13 +409,21 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return companies;
         }
 
+        public static string GetValueByLabel(IEnumerable<ExtractedLineDto> lines, string label)
+        {
+            var text = lines
+                .Select(l => l.Text)
+                .FirstOrDefault(t => t.Contains(label));
+
+            return RemoveLabel(text, label);
+        }
+
         /// <summary>
-        /// Retrieves the text that appears immediately after the specified label in the first line containing that
-        /// label.
+        /// Retrieves the text value that appears immediately after the specified label in the first matching line.
         /// </summary>
-        /// <remarks>If multiple lines contain the label, only the first occurrence is considered. Leading
-        /// spaces, colons, and hyphens are trimmed from the result.</remarks>
-        /// <param name="lines">A collection of lines to search for the specified label. Each line is represented by an ExtractedLineDto
+        /// <remarks>Leading spaces, colons, and hyphens are trimmed from the extracted value. Only the
+        /// first occurrence of the label is considered.</remarks>
+        /// <param name="lines">A collection of extracted lines to search for the label. Each line is represented by an ExtractedLineDto
         /// object.</param>
         /// <param name="label">The label to search for within the lines. The search is case-insensitive.</param>
         /// <returns>A string containing the text found after the specified label in the first matching line. Returns an empty
@@ -315,15 +431,20 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         public static string GetValueAfterLabel(IEnumerable<ExtractedLineDto> lines, string label)
         {
             var line = lines.FirstOrDefault(l =>
-            l.Text.Contains(label, StringComparison.OrdinalIgnoreCase));
-            if (line is null)
+                !string.IsNullOrWhiteSpace(l.Text) &&
+                l.Text.Contains(label, StringComparison.OrdinalIgnoreCase));
+
+            if (line == null)
                 return string.Empty;
 
             var index = line.Text.IndexOf(label, StringComparison.OrdinalIgnoreCase);
             if (index < 0)
                 return string.Empty;
 
-            return line.Text[(index + label.Length)..].Trim(' ', ':', '-');
+            return line.Text[(index + label.Length)..]
+                .Trim(' ')
+                .Trim(':')
+                .Trim('-');
         }
 
         /// <summary>
@@ -345,6 +466,14 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .Where(w => w.X >= start && w.X <= end)
                 .Select(w => w.Text));
         }
+        /*
+        public static IEnumerable<ExtractedWordDto> GetNthWordInLines(IEnumerable<ExtractedWordDto> words, IEnumerable<ExtractedLineDto> lines, int n)
+        {
+            var content = GetWordsFromLines(words, lines);
+            
+            
+        }
+        */
 
         /// <summary>
         /// Retrieves the nth word from the specified input string.
@@ -530,7 +659,107 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         //************SPECIALISED SOLUTIONS BELOW*************
         //****************************************************
 
-        // Pdf numbered sections.
+        //************PURCHASE ORDER**************************
+
+        /// <summary>
+        /// Filters and returns item lines from a collection of extracted lines based on specific criteria related to
+        /// price formatting and word count.
+        /// </summary>
+        /// <remarks>A line is considered an item line if it contains price-formatted values, consists of
+        /// exactly eight words, and does not contain the text "Your ref". This method is typically used to identify
+        /// itemized entries in purchase order documents.</remarks>
+        /// <param name="lines">The collection of extracted line data to evaluate for item line criteria.</param>
+        /// <param name="words">The collection of extracted word data used to determine the word count for each line.</param>
+        /// <returns>An enumerable collection of extracted line data that meet the item line criteria. The collection will be
+        /// empty if no lines match the criteria.</returns>
+        public static IEnumerable<ExtractedLineDto> GetItemLines(IEnumerable<ExtractedLineDto> lines, IEnumerable<ExtractedWordDto> words)
+        {
+            return lines
+                .Where(l =>
+                    HasPriceFormatValues(l.Text, 2) &&
+                    GetWordsFromLine(words, l).Count() == 8 &&
+                    !l.Text.Contains("Your ref"))
+                .OrderBy(l => l.PageNumber)
+                .ThenByDescending(l => l.Y)
+                .ThenBy(l => l.X)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Extracts content blocks for each item line from a collection of extracted lines.
+        /// </summary>
+        /// <remarks>Lines are grouped and ordered by page number and position to determine content
+        /// blocks. Only lines with non-empty text are considered. The method skips lines that should be ignored or are
+        /// positioned below a certain threshold.</remarks>
+        /// <param name="allLines">The complete collection of extracted lines to search for item content. Lines must not be null and should
+        /// contain non-whitespace text.</param>
+        /// <param name="itemLines">The collection of lines that represent the start of each item. Each line must not be null and should contain
+        /// non-whitespace text.</param>
+        /// <returns>An enumerable collection of item content blocks, each corresponding to an item line. Returns an empty
+        /// collection if no valid content blocks are found.</returns>
+        public static IEnumerable<ItemContentBlockDto> GetItemContent(IEnumerable<ExtractedLineDto> allLines, IEnumerable<ExtractedLineDto> itemLines)
+        {
+            if (allLines == null || itemLines == null)
+                return Enumerable.Empty<ItemContentBlockDto>();
+
+            var orderedLines = allLines
+                .Where(l => l != null && !string.IsNullOrWhiteSpace(l.Text))
+                .OrderBy(l => l.PageNumber)
+                .ThenByDescending(l => l.Y)
+                .ThenBy(l => l.X)
+                .ToList();
+
+            var orderedItemLines = itemLines
+                .Where(l => l != null && !string.IsNullOrWhiteSpace(l.Text))
+                .OrderBy(l => l.PageNumber)
+                .ThenByDescending(l => l.Y)
+                .ThenBy(l => l.X)
+                .ToList();
+
+            if (!orderedLines.Any() || !orderedItemLines.Any())
+                return Enumerable.Empty<ItemContentBlockDto>();
+
+            var result = new List<ItemContentBlockDto>();
+
+            for (int i = 0; i < orderedItemLines.Count; i++)
+            {
+                var currentItemLine = orderedItemLines[i];
+                var nextItemLine = i < orderedItemLines.Count - 1
+                    ? orderedItemLines[i + 1]
+                    : null;
+
+                int startIndex = orderedLines.FindIndex(l => SameLine(l, currentItemLine));
+                if (startIndex == -1)
+                    continue;
+
+                int endIndex;
+
+                if (nextItemLine != null)
+                {
+                    endIndex = orderedLines.FindIndex(startIndex + 1, l => SameLine(l, nextItemLine));
+                }
+                else
+                {
+                    endIndex = orderedLines.FindIndex(startIndex + 1, l => IsEndOfItemsLine(l));
+                }
+
+                if (endIndex == -1)
+                    endIndex = orderedLines.Count;
+
+                var content = orderedLines
+                    .Skip(startIndex + 1)
+                    .Take(endIndex - startIndex - 1)
+                    .Where(l =>
+                        !ShouldIgnoreLine(l) &&
+                        l.Y < 575)
+                    .ToList();
+
+                result.Add(new ItemContentBlockDto(currentItemLine, content));
+            }
+
+            return result;
+        }
+
 
         /// <summary>
         /// Identifies section headings within a collection of extracted lines and groups the lines into section blocks

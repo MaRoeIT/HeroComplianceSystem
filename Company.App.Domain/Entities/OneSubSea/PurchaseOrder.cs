@@ -319,7 +319,7 @@
         public HashSet<int> PageNumber { get; }
 
         // Gets the material descriptions associated with this item.
-        public IReadOnlyList<MaterialDescription> MaterialDescriptions { get; }
+        public MaterialDescription MaterialDescriptions { get; }
 
         // Gets the revision value for the item.
         public string Revision { get; }
@@ -327,8 +327,11 @@
         // Gets the ordered quantity.
         public string Quantity { get; }
 
-        // Gets the order unit.
-        public string OrderUnit { get; }
+        // Gets the Unit order quantity.
+        public string Order { get; }
+        
+        // Gets the Unit Type
+        public string Unit { get; }
 
         // Gets the net price for the item.
         public string NetPrice { get; }
@@ -340,10 +343,11 @@
         public PurchaseOrderItem(
             string itemNumber,
             HashSet<int> pageNumber,
-            IReadOnlyList<MaterialDescription> materialDescriptions,
+            MaterialDescription materialDescriptions,
             string revision,
             string quantity,
-            string orderUnit,
+            string order,
+            string unit,
             string netPrice,
             string netAmount)
         {
@@ -352,7 +356,8 @@
             MaterialDescriptions = materialDescriptions;
             Revision = revision;
             Quantity = quantity;
-            OrderUnit = orderUnit;
+            Order = order;
+            Unit = unit;
             NetPrice = netPrice;
             NetAmount = netAmount;
         }
@@ -427,9 +432,6 @@
         // Gets the delivery requirement expiry date text.
         public string DeliveryRequirementExpiryDate { get; }
 
-        // Gets the Seal SQ name.
-        public string SealSQName { get; }
-
         // Gets the Seal SQ description.
         public string SealSQDescription { get; }
 
@@ -445,14 +447,12 @@
         // Constructor.
         public BasicDataText(
             string deliveryRequirementExpiryDate,
-            string sealSQName,
             string sealSQDescription,
             string sealEngineeringPartNumber,
             string tSeal,
             string antiExtrusionRings)
         {
             DeliveryRequirementExpiryDate = deliveryRequirementExpiryDate;
-            SealSQName = sealSQName;
             SealSQDescription = sealSQDescription;
             SealEngineeringPartNumber = sealEngineeringPartNumber;
             TSeal = tSeal;

@@ -19,11 +19,13 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
 
         private readonly IPurchaseOrderHeaderMapper _headerMapper;
         private readonly IPurchaseOrderOverheadMapper _overheadMapper;
+        private readonly IItemMapper _itemMapper;
 
-        public MapPurchaseOrderDocument(IPurchaseOrderHeaderMapper headerMapper, IPurchaseOrderOverheadMapper overheadMapper)
+        public MapPurchaseOrderDocument(IPurchaseOrderHeaderMapper headerMapper, IPurchaseOrderOverheadMapper overheadMapper, IItemMapper itemMapper)
         {
             _headerMapper = headerMapper;
             _overheadMapper = overheadMapper;
+            _itemMapper = itemMapper;
         }
 
         public object Map(ExtractedDocumentDto document)
@@ -36,7 +38,8 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
             
             var header = _headerMapper.Map(document);
             var overhead = _overheadMapper.Map(document);
-            var items = MapItems(document);
+
+            var items = _itemMapper.Map(document);
 
             int pageNumbers = GetNumbersofPagesInFile(lines);
             var netAndTotalPage = GetLinesOnPage(lines, pageNumbers - 1);

@@ -6,5 +6,9 @@
     /// </summary>
     public record MasterDocumentRequirementList : Order
     {
+        public MasterDocumentRequirementList(
+            string orderNumber,
+            string orderDate
+            ) : base(orderNumber, orderDate) { }
     }
 }

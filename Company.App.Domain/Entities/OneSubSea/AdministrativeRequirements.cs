@@ -6,5 +6,9 @@
     /// </summary>
     public record AdministrativeRequirements : Order
     {
+        public AdministrativeRequirements(
+            string orderNumber,
+            string orderDate
+            ) : base(orderNumber, orderDate) { }
     }
 }

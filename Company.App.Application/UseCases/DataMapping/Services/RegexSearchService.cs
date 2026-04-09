@@ -240,5 +240,27 @@ namespace Company.App.Application.UseCases.DataMapping.Services
 
             return new SectionDto(sectionNumber, title, level);
         }
+
+        public static string RemoveLabel(string? text, string label)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            return Regex.Replace(text, $@"{Regex.Escape(label)}\s*:?\s*", "").Trim();
+        }
+
+        /// <summary>
+        /// Searches the specified text for the first substring that matches the given regular expression pattern.
+        /// </summary>
+        /// <param name="text">The input string to search for a matching substring.</param>
+        /// <param name="pattern">The regular expression pattern to match within the input text.</param>
+        /// <returns>The first substring in the input text that matches the specified pattern, or an empty string if no match is
+        /// found.</returns>
+        public static string ContextTrimParse(string text, string pattern)
+        {
+            var match = Regex.Match(text, pattern);
+
+            return match.Success ? match.Value : string.Empty;
+        }
     }
 }

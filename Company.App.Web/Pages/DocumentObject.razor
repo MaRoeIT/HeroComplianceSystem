@@ -1,0 +1,281 @@
+﻿@page "/document-object"
+@rendermode InteractiveServer
+@using System.Text.Json
+@using Company.App.Application.Shared
+@using Company.App.Application.UseCases.DataMapping.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Document Object - Hero Compliance System</PageTitle>
+
+<MudText Typo="Typo.h2" GutterBottom="true">
+    <MudIcon Icon="@Icons.Material.Filled.Description" Class="mr-2" />
+    Document Object
+</MudText>
+<MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-6">
+    Upload a PDF and render its mapped document object
+</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="8">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudText Typo="Typo.h6" Class="mb-4">Upload PDF File</MudText>
+
+            <MudFileUpload T="IBrowserFile"
+                           @ref="_fileUpload"
+                           Accept=".pdf,application/pdf"
+                           OnFilesChanged="HandleFileSelected"
+                           MaximumFileCount="1">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                               OnClick="OpenFilePicker"
+                               Size="Size.Large"
+                               FullWidth="true">
+                        Select PDF File
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+
+            @if (_isProcessing)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-4" />
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">
+                    <em>Mapping PDF into a document object...</em>
+                </MudText>
+            }
+            else if (!string.IsNullOrWhiteSpace(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4" Elevation="2">
+                    @_errorMessage
+                </MudAlert>
+            }
+            else if (_mappingResult?.IsSuccess == true && _mappingResult.Value is not null)
+            {
+                <MudAlert Severity="Severity.Success" Class="mt-4" Elevation="2">
+                    <MudText Typo="Typo.h6">Document mapping completed.</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Document type: <strong>@_mappingResult.Value.DocumentType</strong>
+                    </MudText>
+                </MudAlert>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.h6" Class="mb-2">Mapped object values</MudText>
+
+                @if (_mappedPayload.HasValue)
+                {
+                    <MudPaper Outlined="true" Class="pa-4">
+                        @RenderJsonNode("Root", _mappedPayload.Value)
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        No mapped payload was returned from the API.
+                    </MudText>
+                }
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="4" Class="pa-6">
+            <MudText Typo="Typo.h6" GutterBottom="true">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
+                Instructions
+            </MudText>
+
+            <MudText Typo="Typo.body2" Class="mb-2">
+                1. Select a PDF document
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                2. The system identifies the document type
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                3. The correct mapper is selected based on the enum
+            </MudText>
+            <MudText Typo="Typo.body2">
+                4. The mapped object values are rendered below
+            </MudText>
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                This page is intended to inspect the structured result after document mapping.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private MudFileUpload<IBrowserFile>? _fileUpload;
+    private bool _isProcessing;
+    private string? _errorMessage;
+    private Result<DocumentMappingResultDto>? _mappingResult;
+    private JsonElement? _mappedPayload;
+
+    private async Task OpenFilePicker()
+    {
+        if (_fileUpload is not null)
+        {
+            await _fileUpload.OpenFilePickerAsync();
+        }
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        _isProcessing = true;
+        _errorMessage = null;
+        _mappingResult = null;
+        _mappedPayload = null;
+        StateHasChanged();
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("PdfExtractAPI");
+
+            byte[] fileBytes;
+            using (var stream = new MemoryStream())
+            {
+                await file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024).CopyToAsync(stream);
+                fileBytes = stream.ToArray();
+            }
+
+            using var mapContent = new MultipartFormDataContent();
+
+            var mapFileContent = new ByteArrayContent(fileBytes);
+            mapFileContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+
+            mapContent.Add(mapFileContent, "file", file.Name);
+
+            var mapUrl = new Uri(Navigation.BaseUri + "api/v1/order/mapDocument");
+            var mapResponse = await httpClient.PostAsync(mapUrl, mapContent);
+
+            if (mapResponse.IsSuccessStatusCode)
+            {
+                _mappingResult = await mapResponse.Content.ReadFromJsonAsync<Result<DocumentMappingResultDto>>();
+
+                if (_mappingResult is null)
+                {
+                    _errorMessage = "No response content was returned.";
+                }
+                else if (!_mappingResult.IsSuccess)
+                {
+                    _errorMessage = _mappingResult.Error ?? "Document mapping failed.";
+                }
+                else if (_mappingResult.Value is not null)
+                {
+                    if (_mappingResult.Value.MappedPayload is JsonElement json)
+                    {
+                        _mappedPayload = json;
+                    }
+                }
+            }
+            else
+            {
+                var errorContent = await mapResponse.Content.ReadAsStringAsync();
+                _errorMessage = $"Mapping API error: {mapResponse.ReasonPhrase}. {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+
+        _isProcessing = false;
+        StateHasChanged();
+    }
+
+    private RenderFragment RenderJsonNode(string name, JsonElement element) => builder =>
+    {
+        int seq = 0;
+
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                builder.OpenComponent<MudPaper>(seq++);
+                builder.AddAttribute(seq++, "Class", "pa-3 mb-3");
+                builder.AddAttribute(seq++, "Outlined", true);
+                builder.AddAttribute(seq++, "ChildContent", (RenderFragment)((objectBuilder) =>
+                {
+                    int innerSeq = 0;
+
+                    objectBuilder.OpenComponent<MudText>(innerSeq++);
+                    objectBuilder.AddAttribute(innerSeq++, "Typo", Typo.h6);
+                    objectBuilder.AddAttribute(innerSeq++, "ChildContent", (RenderFragment)((titleBuilder) =>
+                    {
+                        titleBuilder.AddContent(0, name);
+                    }));
+                    objectBuilder.CloseComponent();
+
+                    foreach (var property in element.EnumerateObject())
+                    {
+                        objectBuilder.AddContent(innerSeq++, RenderJsonProperty(property.Name, property.Value));
+                    }
+                }));
+                builder.CloseComponent();
+                break;
+
+            case JsonValueKind.Array:
+                builder.OpenComponent<MudPaper>(seq++);
+                builder.AddAttribute(seq++, "Class", "pa-3 mb-3");
+                builder.AddAttribute(seq++, "Outlined", true);
+                builder.AddAttribute(seq++, "ChildContent", (RenderFragment)((arrayBuilder) =>
+                {
+                    int innerSeq = 0;
+
+                    arrayBuilder.OpenComponent<MudText>(innerSeq++);
+                    arrayBuilder.AddAttribute(innerSeq++, "Typo", Typo.h6);
+                    arrayBuilder.AddAttribute(innerSeq++, "ChildContent", (RenderFragment)((titleBuilder) =>
+                    {
+                        titleBuilder.AddContent(0, $"{name} [{element.GetArrayLength()}]");
+                    }));
+                    arrayBuilder.CloseComponent();
+
+                    int index = 0;
+                    foreach (var item in element.EnumerateArray())
+                    {
+                        arrayBuilder.AddContent(innerSeq++, RenderJsonNode($"{name}[{index}]", item));
+                        index++;
+                    }
+                }));
+                builder.CloseComponent();
+                break;
+
+            default:
+                builder.OpenComponent<MudText>(seq++);
+                builder.AddAttribute(seq++, "Typo", Typo.body2);
+                builder.AddAttribute(seq++, "Class", "mb-1");
+                builder.AddAttribute(seq++, "ChildContent", (RenderFragment)((valueBuilder) =>
+                {
+                    valueBuilder.AddMarkupContent(0, $"<strong>{name}:</strong> {FormatJsonValue(element)}");
+                }));
+                builder.CloseComponent();
+                break;
+        }
+    };
+
+    private RenderFragment RenderJsonProperty(string propertyName, JsonElement propertyValue) => builder =>
+    {
+        builder.AddContent(0, RenderJsonNode(propertyName, propertyValue));
+    };
+
+    private static string FormatJsonValue(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? string.Empty,
+            JsonValueKind.Number => element.ToString(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            JsonValueKind.Null => "null",
+            _ => element.ToString()
+        };
+    }
+}

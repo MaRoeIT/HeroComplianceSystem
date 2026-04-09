@@ -3,14 +3,12 @@ using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataMapping;
 using Company.App.Application.UseCases.DataMapping.OneSubSea;
 using Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument;
-using Company.App.Application.UseCases.DataMapping.PurchaseOrder;
-using Company.App.Application.UseCases.DetectBatman;
+using Company.App.Domain.Entities.OneSubSea;
 using Company.App.Domain.Specification;
 using Company.App.Infrastructure.Adapters;
 using Company.App.Infrastructure.Persistence;
 using Company.App.Infrastructure.Persistence.Repositories;
 using Company.App.Web;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -40,6 +38,41 @@ builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();
 builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>();
 builder.Services.AddScoped<IDocumentMapper, MaterialDocumentationPackageDocumentMapper>();
 builder.Services.AddScoped<IDocumentMapper, AdministrativeRequirementsDocumentMapper>();
+
+// --- Core services ---
+builder.Services.AddScoped<IPdfDataExtractor, PdfPigDataExtractor>(); // :contentReference[oaicite:0]{index=0}
+builder.Services.AddScoped<IHeroScanner, CsvHeroScanner>();           // :contentReference[oaicite:1]{index=1}
+builder.Services.AddScoped<IHeroRepository, HeroRepository>();        // :contentReference[oaicite:2]{index=2}
+
+// --- Document type detection ---
+builder.Services.AddScoped<IsOrderDocumentSpec>();
+builder.Services.AddScoped<IDocumentTypeDecider, DocumentTypeDecider>(); // :contentReference[oaicite:3]{index=3}
+
+// --- Routing ---
+builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();       // :contentReference[oaicite:4]{index=4}
+
+// --- Document mappers ---
+builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>(); // :contentReference[oaicite:5]{index=5}
+builder.Services.AddScoped<IDocumentMapper, MaterialDocumentationPackageDocumentMapper>();
+builder.Services.AddScoped<IDocumentMapper, AdministrativeRequirementsDocumentMapper>();
+
+// --- Purchase Order specific mappers ---
+builder.Services.AddScoped<IPurchaseOrderHeaderMapper, MapHeader>();     // :contentReference[oaicite:6]{index=6}
+builder.Services.AddScoped<IPurchaseOrderOverheadMapper, MapPurchaseOrderOverhead>(); // :contentReference[oaicite:7]{index=7}
+builder.Services.AddScoped<IItemMapper, MapItems>();                                      // :contentReference[oaicite:8]{index=8}
+builder.Services.AddScoped<IMaterialDescriptionMapper, MapMaterialDescription>();         // :contentReference[oaicite:9]{index=9}
+
+// --- Party mappers ---
+builder.Services.AddScoped<ISellerMapper, MapSeller>(); // :contentReference[oaicite:10]{index=10}
+builder.Services.AddScoped<IBuyerMapper, MapBuyer>();   // :contentReference[oaicite:11]{index=11}
+
+// --- Address mappers (GENERIC ⚠️)
+builder.Services.AddScoped<IAddressMapper<Address>, MapVendorAddress>(); // :contentReference[oaicite:12]{index=12}
+builder.Services.AddScoped<IAddressMapper<Address>, MapInvoiceAddress>();
+builder.Services.AddScoped<IAddressMapper<DeliveryAddress>, MapDeliveryAddress>();
+
+// --- Basic data text mapper ---
+builder.Services.AddScoped<IBasicDataTextMapper, MapBasicDataText>(); // :contentReference[oaicite:13]{index=13}
 
 // Routes Document type toward the assigned DocumentType by Enum
 //builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();

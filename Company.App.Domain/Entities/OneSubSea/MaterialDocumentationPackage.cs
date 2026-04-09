@@ -6,5 +6,9 @@
     /// </summary>
     public record MaterialDocumentationPackage : Order
     {
+        public MaterialDocumentationPackage(
+            string orderNumber,
+            string orderDate
+            ) : base(orderNumber, orderDate) { }
     }
 }
