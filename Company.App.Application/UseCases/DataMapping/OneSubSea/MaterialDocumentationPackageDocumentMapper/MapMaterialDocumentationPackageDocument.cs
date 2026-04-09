@@ -32,9 +32,11 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.MaterialDocumen
     {
         public DocumentType SupportedType => DocumentType.MaterialDocumentationPackage;
 
-        //public MapMaterialDocumentationPackageDocument(IMaterialDocumentationPackageHeaderMapper headerMapper, IMaterialDocumentationPackageOverheadMapper overheadMapper)
-        //{
-        //}
+
+
+        public MapMaterialDocumentationPackageDocument(IMaterialDocumentationPackageHeaderMapper headerMapper, IMaterialDocumentationPackageOverheadMapper overheadMapper)
+        {
+        }
         public object Map(ExtractedDocumentDto document)
         {
             return new MaterialDocumentationPackage(
