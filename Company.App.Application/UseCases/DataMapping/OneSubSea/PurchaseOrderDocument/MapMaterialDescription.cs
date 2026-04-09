@@ -11,8 +11,25 @@ using static Company.App.Application.UseCases.DataMapping.Helper.IsItemLine;
 
 namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument
 {
+    /// <summary>
+    /// Provides functionality to map extracted document and line data to a material description model.
+    /// </summary>
+    /// <remarks>This class is intended for use in scenarios where material information must be extracted and
+    /// structured from document data, such as in document processing or data extraction pipelines. Instances of this
+    /// class are not intended to be inherited.</remarks>
     public sealed class MapMaterialDescription : IMaterialDescriptionMapper
     {
+        /// <summary>
+        /// Creates a new MaterialDescription by extracting and mapping relevant fields from the provided document and
+        /// item line data.
+        /// </summary>
+        /// <remarks>This method parses the document structure to locate and extract material-related
+        /// fields such as name, traceability code, manufacturer, and delivery date. It is intended for use when mapping
+        /// OCR or extracted document data into a structured material description.</remarks>
+        /// <param name="document">The extracted document data containing lines and words to be parsed for material information.</param>
+        /// <param name="itemLine">The specific line within the document that represents the item to be mapped.</param>
+        /// <param name="materialNumber">The material number to associate with the resulting MaterialDescription. Cannot be null.</param>
+        /// <returns>A MaterialDescription instance populated with values extracted from the specified document and item line.</returns>
         public MaterialDescription Map(ExtractedDocumentDto document, ExtractedLineDto itemLine, string materialNumber)
         {
             var words = document.Words;

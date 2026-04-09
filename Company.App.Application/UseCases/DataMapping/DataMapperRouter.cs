@@ -20,6 +20,16 @@ namespace Company.App.Application.UseCases.DataMapping
             _mappers = mappers;
         }
 
+        /// <summary>
+        /// Routes the specified extracted document to the appropriate business document mapper and returns the mapping
+        /// result.
+        /// </summary>
+        /// <remarks>If no mapper exists for the detected document type, the result will still include the
+        /// detected type and the original document, but the mapped payload will be null. This allows callers to inspect
+        /// the extracted document even when mapping is not available.</remarks>
+        /// <param name="document">The extracted document to be routed and mapped. Cannot be null.</param>
+        /// <returns>A result object containing the detected document type, the original extracted document, and the mapped
+        /// payload if a suitable mapper is found; otherwise, the mapped payload is null.</returns>
         public DocumentMappingResultDto Route(ExtractedDocumentDto document)
         {
             // Build a lightweight header context used for type detection.
@@ -54,10 +64,11 @@ namespace Company.App.Application.UseCases.DataMapping
         }
 
         /// <summary>
-        /// Builds the header context used for document type identification.
-        /// Currently only first 10 lines from the first page are considered
-        /// in decending order.
+        /// Builds a header context object from the specified extracted document, using lines from the first page.
         /// </summary>
+        /// <param name="document">The extracted document from which to build the header context. Must not be null and should contain line
+        /// data.</param>
+        /// <returns>A DocumentHeaderContextDto containing candidate header lines from the first page of the document.</returns>
         private static DocumentHeaderContextDto BuildHeaderContext(ExtractedDocumentDto document)
         {
             var candidatLines = document.Lines

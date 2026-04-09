@@ -8,8 +8,25 @@ using static System.Net.WebRequestMethods;
 
 namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument
 {
+    /// <summary>
+    /// Provides functionality to map extracted document data to a seller domain model.
+    /// </summary>
+    /// <remarks>This class implements the ISellerMapper interface to extract and transform relevant seller
+    /// information from a structured document. It is typically used in scenarios where seller details must be parsed
+    /// from document data for further processing or integration.</remarks>
     public class MapSeller : ISellerMapper
     {
+        /// <summary>
+        /// Creates a new Seller instance by extracting relevant seller information from the specified extracted
+        /// document.
+        /// </summary>
+        /// <remarks>This method extracts seller-related fields such as purchase order number, vendor
+        /// number, contact details, and other attributes from the first page of the document. The extraction relies on
+        /// specific patterns and line positions within the document's text. If required fields are missing or formatted
+        /// unexpectedly, the resulting Seller object may contain empty or partial data.</remarks>
+        /// <param name="document">The extracted document containing lines of text from which seller information will be parsed. Cannot be
+        /// null.</param>
+        /// <returns>A Seller object populated with values parsed from the provided document.</returns>
         public Seller Map(ExtractedDocumentDto document)
         {
             var lines = document.Lines;

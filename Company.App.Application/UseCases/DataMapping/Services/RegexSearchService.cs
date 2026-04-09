@@ -4,8 +4,23 @@ using System.Text.RegularExpressions;
 
 namespace Company.App.Application.UseCases.DataMapping.Services
 {
+    /// <summary>
+    /// Provides static methods for extracting and manipulating values from strings using regular expressions, including
+    /// numeric values, prices, email addresses, dates, substrings between markers, and company names.
+    /// </summary>
+    /// <remarks>This class offers a collection of utility methods for common text parsing scenarios, such as
+    /// extracting formatted values or removing specific character types. All methods are thread-safe and do not modify
+    /// the input strings. The class is intended for use in scenarios where regular expression-based text processing is
+    /// required, and it does not maintain any internal state.</remarks>
     public static class RegexSearchService
     {
+        /// <summary>
+        /// Specifies the types of regular expression search operations supported by the service.
+        /// </summary>
+        /// <remarks>Use this enumeration to select the desired pattern-matching operation when performing
+        /// text extraction or validation tasks. Each value represents a distinct search scenario, such as extracting
+        /// numeric values, prices, email addresses, dates in a specific format, or substrings between delimiters. The
+        /// meaning and expected input for each operation depend on the selected value.</remarks>
         public enum RegexSearchServiceType
         {
             GetNumericValueInStringByLength = 1,
@@ -241,6 +256,16 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return new SectionDto(sectionNumber, title, level);
         }
 
+        /// <summary>
+        /// Removes the specified label and any following colon or whitespace from the beginning of the input text.
+        /// </summary>
+        /// <remarks>This method removes the first occurrence of the specified label, along with any
+        /// optional colon and surrounding whitespace, from the start of the input text. The comparison is
+        /// case-sensitive.</remarks>
+        /// <param name="text">The input string from which to remove the label. Can be null or empty.</param>
+        /// <param name="label">The label to remove from the beginning of the text. Cannot be null or empty.</param>
+        /// <returns>A string with the label and any following colon or whitespace removed from the beginning. Returns an empty
+        /// string if the input text is null or consists only of whitespace.</returns>
         public static string RemoveLabel(string? text, string label)
         {
             if (string.IsNullOrWhiteSpace(text))

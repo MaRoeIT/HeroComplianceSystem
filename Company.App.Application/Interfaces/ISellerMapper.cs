@@ -6,6 +6,9 @@ using System.Text;
 
 namespace Company.App.Application.Interfaces
 {
+    /// <summary>
+    /// Defines a contract for mapping an extracted document data transfer object to a seller domain model.
+    /// </summary>
     public interface ISellerMapper
     {
         Seller Map(ExtractedDocumentDto document);

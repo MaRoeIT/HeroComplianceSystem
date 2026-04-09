@@ -10,8 +10,25 @@ using static System.Net.WebRequestMethods;
 
 namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument
 {
+    /// <summary>
+    /// Provides functionality to map extracted document data into a hierarchical collection of purchase order overhead
+    /// sections.
+    /// </summary>
+    /// <remarks>This class parses structured sections from an extracted document and organizes them into a
+    /// tree of purchase order overheads. It is intended for use when processing documents that follow a specific
+    /// sectioned format, such as purchase orders with standardized overhead sections. Instances of this class are
+    /// thread-safe for concurrent use.</remarks>
     public sealed class MapPurchaseOrderOverhead : IPurchaseOrderOverheadMapper
     {
+        /// <summary>
+        /// Maps the specified extracted document to a collection of purchase order overhead sections.
+        /// </summary>
+        /// <remarks>This method identifies and extracts specific overhead sections from the provided
+        /// document based on predefined section headers. The returned list preserves the order of the sections as they
+        /// appear in the document.</remarks>
+        /// <param name="document">The extracted document data to be analyzed and mapped. Cannot be null.</param>
+        /// <returns>A read-only list of purchase order overhead sections found in the document. The list will be empty if no
+        /// relevant sections are found.</returns>
         public IReadOnlyList<PurchaseOrderOverhead> Map(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
@@ -44,6 +61,18 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
                 .ToList();
         }
 
+        /// <summary>
+        /// Builds a hierarchical representation of a purchase order section and its subsections from the provided
+        /// section data.
+        /// </summary>
+        /// <remarks>This method recursively processes the section hierarchy, associating each section
+        /// with its direct children and filtering content to exclude lines belonging to child sections. The resulting
+        /// structure can be used to represent nested purchase order details.</remarks>
+        /// <param name="current">The section block representing the current node to build in the hierarchy.</param>
+        /// <param name="allBlocks">A list of all section blocks available for constructing the hierarchy. Used to identify child sections and
+        /// their relationships.</param>
+        /// <returns>A PurchaseOrderOverhead instance representing the current section, including its content, bullet points, and
+        /// recursively built subsections.</returns>
         private static PurchaseOrderOverhead BuildNode(
             SectionBlockDto current,
             List<SectionBlockDto> allBlocks)
@@ -80,6 +109,15 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
                 subSections);
         }
 
+        /// <summary>
+        /// Determines whether the specified child represents a direct child of the given parent in a dot-delimited
+        /// hierarchy.
+        /// </summary>
+        /// <remarks>A direct child is defined as a string that starts with the parent followed by a dot,
+        /// and has exactly one additional segment in the hierarchy.</remarks>
+        /// <param name="parent">The parent identifier, represented as a dot-delimited string.</param>
+        /// <param name="child">The child identifier to evaluate, represented as a dot-delimited string.</param>
+        /// <returns>true if child is a direct child of parent; otherwise, false.</returns>
         private static bool IsDirectChild(string parent, string child)
         {
             if (!child.StartsWith(parent + "."))
@@ -91,6 +129,17 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
             return childLevel == parentLevel + 1;
         }
 
+        /// <summary>
+        /// Splits a collection of extracted lines into separate lists of content and bullet points based on their
+        /// formatting.
+        /// </summary>
+        /// <remarks>Lines that are null, empty, or consist only of whitespace are ignored. The method
+        /// uses a bullet detection utility to classify lines as bullet points.</remarks>
+        /// <param name="lines">The collection of extracted lines to process. Each line is evaluated to determine whether it is a bullet
+        /// point or regular content.</param>
+        /// <returns>A tuple containing two lists: the first list includes lines identified as regular content, and the second
+        /// list includes lines identified as bullet points. Both lists are empty if no lines match their respective
+        /// criteria.</returns>
         private static (List<string> Content, List<string> BulletPoints)
             SplitOwnContent(IEnumerable<ExtractedLineDto> lines)
         {

@@ -4,6 +4,10 @@ using System.Text;
 
 namespace Company.App.Application.UseCases.DataMapping.Helper
 {
+    /// <summary>
+    /// Provides utility methods for determining whether a line of text represents a bullet point.
+    /// </summary>
+    /// <remarks>This class is static and cannot be instantiated.</remarks>
     public static class IsBulletLine
     {
         public static bool IsBullet(string text)

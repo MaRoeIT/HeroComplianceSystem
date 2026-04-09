@@ -11,6 +11,15 @@ using static Company.App.Application.UseCases.DataMapping.Helper.IsPriceFormatVa
 
 namespace Company.App.Application.UseCases.DataMapping.Services
 {
+    /// <summary>
+    /// Provides static methods for searching, filtering, and extracting structured information from collections of
+    /// extracted document lines and words, such as those obtained from PDF text extraction.
+    /// </summary>
+    /// <remarks>The methods in this class support a variety of document analysis scenarios, including
+    /// locating lines or words by content, extracting values using patterns, grouping lines into sections or items, and
+    /// handling document-specific structures such as purchase orders. All methods are stateless and do not modify the
+    /// input collections. This class is intended for use in document processing pipelines where accurate extraction and
+    /// organization of textual data is required.</remarks>
     public static class ExtractedDocumentSearch
     {
         /// <summary>
@@ -282,6 +291,19 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .ToList();
         }
 
+        /// <summary>
+        /// Returns a collection of words that are associated with the specified lines, matching by page number and
+        /// vertical position within a given tolerance.
+        /// </summary>
+        /// <remarks>The returned words are ordered first by page number, then by descending vertical
+        /// position, and finally by horizontal position. This method is useful for grouping words with their
+        /// corresponding text lines in document processing scenarios.</remarks>
+        /// <param name="words">The collection of words to filter and associate with lines. Cannot be null.</param>
+        /// <param name="lines">The collection of lines to match words against. Cannot be null.</param>
+        /// <param name="yTolerance">The maximum allowed difference in vertical position, in units, between a word and a line for them to be
+        /// considered associated. Defaults to 2.0.</param>
+        /// <returns>An ordered collection of words that are matched to the provided lines based on page number and vertical
+        /// proximity. Returns an empty collection if either input is null.</returns>
         public static IEnumerable<ExtractedWordDto> GetWordsFromLines(IEnumerable<ExtractedWordDto> words, IEnumerable<ExtractedLineDto> lines, double yTolerance = 2.0)
         {
             if (words == null || lines == null)
@@ -298,6 +320,19 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .ToList();
         }
 
+        /// <summary>
+        /// Returns the nth word from each line, based on horizontal position, within a specified vertical tolerance.
+        /// </summary>
+        /// <remarks>Words are matched to lines based on page number, horizontal position within the line
+        /// bounds, and vertical proximity as defined by yTolerance. Words in each line are ordered by their X
+        /// coordinate before selecting the nth word.</remarks>
+        /// <param name="words">A collection of words to search, each with positional and page information.</param>
+        /// <param name="lines">A collection of lines that define the regions in which to search for words.</param>
+        /// <param name="n">The one-based index of the word to extract from each line. Must be greater than or equal to 1.</param>
+        /// <param name="yTolerance">The maximum allowed difference in the Y coordinate between a word and a line for the word to be considered
+        /// part of the line. Defaults to 2.0.</param>
+        /// <returns>An enumerable collection containing the nth word from each line where such a word exists. The collection is
+        /// empty if no matching words are found.</returns>
         public static IEnumerable<ExtractedWordDto> GetNthWordInLines(IEnumerable<ExtractedWordDto> words, IEnumerable<ExtractedLineDto> lines, int n, double yTolerance = 2.0)
         {
             if (words == null || lines == null || n < 1)
@@ -409,6 +444,13 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return companies;
         }
 
+        /// <summary>
+        /// Searches for the first line containing the specified label and returns its value with the label removed.
+        /// </summary>
+        /// <param name="lines">A collection of extracted lines to search for the specified label.</param>
+        /// <param name="label">The label to search for within the text of each line.</param>
+        /// <returns>The value from the first line that contains the specified label, with the label removed. Returns null if no
+        /// such line is found.</returns>
         public static string GetValueByLabel(IEnumerable<ExtractedLineDto> lines, string label)
         {
             var text = lines
@@ -466,15 +508,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .Where(w => w.X >= start && w.X <= end)
                 .Select(w => w.Text));
         }
-        /*
-        public static IEnumerable<ExtractedWordDto> GetNthWordInLines(IEnumerable<ExtractedWordDto> words, IEnumerable<ExtractedLineDto> lines, int n)
-        {
-            var content = GetWordsFromLines(words, lines);
-            
-            
-        }
-        */
-
+        
         /// <summary>
         /// Retrieves the nth word from the specified input string.
         /// </summary>

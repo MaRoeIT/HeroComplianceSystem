@@ -6,6 +6,9 @@ using System.Text;
 
 namespace Company.App.Application.Interfaces
 {
+    /// <summary>
+    /// Defines a method that maps an extracted document data transfer object to a buyer domain model.
+    /// </summary>
     public interface IBuyerMapper
     {
         Buyer Map(ExtractedDocumentDto document);

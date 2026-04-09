@@ -20,6 +20,16 @@ namespace Company.App.Application.UseCases.DataMapping
             _router = router;
         }
 
+        /// <summary>
+        /// Processes a document mapping command by extracting data from a PDF file and routing it to the appropriate
+        /// document mapper.
+        /// </summary>
+        /// <remarks>Returns a failed result if the PDF data cannot be extracted or if the document type
+        /// cannot be identified.</remarks>
+        /// <param name="request">The command containing the PDF file data to be mapped.</param>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>A result containing the mapped document data if extraction and mapping succeed; otherwise, a failed result
+        /// with an error message.</returns>
         public async Task<Result<DocumentMappingResultDto>> Handle(MapDocumentCommand request, CancellationToken cancellationToken)
         {
             // First extract raw textual and positional content from the PDF.

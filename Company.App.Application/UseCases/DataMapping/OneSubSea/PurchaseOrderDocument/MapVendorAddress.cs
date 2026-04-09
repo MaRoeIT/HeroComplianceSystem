@@ -8,8 +8,25 @@ using static System.Net.WebRequestMethods;
 
 namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument
 {
+    /// <summary>
+    /// Provides functionality to map vendor address information from an extracted document to an Address object.
+    /// </summary>
+    /// <remarks>This class is intended for use when extracting and mapping vendor address details from
+    /// structured document data, such as OCR or parsed invoice content. It implements the IAddressMapper<Address>
+    /// interface to support consistent address mapping operations.</remarks>
     public sealed class MapVendorAddress : IAddressMapper<Address>
     {
+        /// <summary>
+        /// Maps the extracted document data to an Address instance by parsing relevant address fields from the provided
+        /// document.
+        /// </summary>
+        /// <remarks>This method assumes the document follows a specific structure where the vendor
+        /// address appears on the first page and is labeled accordingly. If the expected structure is not present, some
+        /// address fields may be incomplete or empty.</remarks>
+        /// <param name="document">The extracted document data containing lines and words to be analyzed for address information. Cannot be
+        /// null.</param>
+        /// <returns>An Address object populated with the company name, street name, street number, postal code, city, and
+        /// country parsed from the document. Fields may be empty if the corresponding information is not found.</returns>
         public Address Map(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
