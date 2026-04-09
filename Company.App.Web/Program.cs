@@ -2,7 +2,7 @@ using Company.App.Application.Interfaces;
 using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataMapping;
 using Company.App.Application.UseCases.DataMapping.AdministrativeRequirements;
-using Company.App.Application.UseCases.DataMapping.MaterialDocumentationPackage;
+using Company.App.Application.UseCases.DataMapping.OneSubSea.MaterialDocumentationPackageDocumentMapper;
 using Company.App.Application.UseCases.DataMapping.PurchaseOrder;
 using Company.App.Application.UseCases.DetectBatman;
 using Company.App.Domain.Specification;
