@@ -63,7 +63,7 @@
         public string QMControlKey { get; }
         public IReadOnlyList<InspectionSetup> InspectionSetups { get; }
         public IReadOnlyList<Classification> Classifications { get; }
-        public IReadOnlyList<OtherRelatedDoc> OtherRelatedDocs { get; }
+        public IReadOnlyList<OtherRelatedDocs> OtherRelatedDocs { get; }
     }
     public record InspectionSetup
     {
