@@ -61,21 +61,8 @@
         public string SerialNumberProfile { get; }
         public string ShelfLife { get; }
         public string QMControlKey { get; }
-        public IReadOnlyList<InspectionSetup> InspectionSetups { get; }
-        public IReadOnlyList<Classification> Classifications { get; }
-        public IReadOnlyList<OtherRelatedDocs> OtherRelatedDocs { get; }
+        public IReadOnlyList<string> InspectionSetups { get; }
+        public IReadOnlyList<string> Classifications { get; }
+        public IReadOnlyList<string> OtherRelatedDocs { get; }
     }
-    public record InspectionSetup
-    {
-        public string InspectionSetupItem { get; }
-    }
-    public record Classification
-    {
-        public string ClassificationItem { get; }
-    }
-    public record OtherRelatedDocs
-    {
-        public IReadOnlyList<string> OtherRelatedDocsItem { get; }
-    }
-
 }
