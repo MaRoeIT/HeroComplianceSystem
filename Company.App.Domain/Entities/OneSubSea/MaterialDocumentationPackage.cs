@@ -36,6 +36,10 @@
     }
     public record MaterialMasterReport
     {
+        public IReadOnlyList<MaterialReport> MaterialReports { get; }
+    }
+    public record MaterialReport
+    {
         public string ReportDate{ get; }
         public string MaterialNumber { get; }
         public string Description { get; }
