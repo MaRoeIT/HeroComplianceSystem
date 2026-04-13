@@ -31,7 +31,7 @@
 
     public record MaterialDocumentationPackageIndex
     {   
-        public List<MaterialMasterReport> MaterialMasterReports { get; }
+        public IReadOnlyList<MaterialMasterReport> MaterialMasterReports { get; }
 
     }
     public record MaterialMasterReport
@@ -61,9 +61,9 @@
         public string SerialNumberProfile { get; }
         public string ShelfLife { get; }
         public string QMControlKey { get; }
-        public List<InspectionSetup> InspectionSetups { get; }
-        public List<Classification> Classifications { get; }
-        public List<OtherRelatedDoc> OtherRelatedDocs { get; }
+        public IReadOnlyList<InspectionSetup> InspectionSetups { get; }
+        public IReadOnlyList<Classification> Classifications { get; }
+        public IReadOnlyList<OtherRelatedDoc> OtherRelatedDocs { get; }
     }
     public record InspectionSetup
     {
