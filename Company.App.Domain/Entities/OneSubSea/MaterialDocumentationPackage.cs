@@ -73,9 +73,9 @@
     {
         public string ClassificationItem { get; }
     }
-    public record OtherRelatedDoc 
+    public record OtherRelatedDocs
     {
-        public string OtherRelatedDocItem { get; }
+        public IReadOnlyList<string> OtherRelatedDocsItem { get; }
     }
 
 }
