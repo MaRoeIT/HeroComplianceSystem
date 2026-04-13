@@ -6,68 +6,72 @@
     /// </summary>
     public record MaterialDocumentationPackage : Order
     {
-        public MaterialDocumentationPackageHeader Header { get; } = new();
-        public MaterialDocumentationPackageIndex Index { get; } = new();
+        public MaterialDocumentationPackageHeader Header { get; }
+        public MaterialDocumentationPackageIndex Index { get; }
 
         public MaterialDocumentationPackage(
         string orderNumber,
-        string orderDate
-        ) : base(orderNumber, orderDate) { }
+        string orderDate,
+        MaterialDocumentationPackageHeader header
+        ) : base(orderNumber, orderDate)
+        {
+            Header = header;
+        }
         }
     public record MaterialDocumentationPackageHeader
     {
-        public string DocumentTitle { get; } = string.Empty;  
-        public string PurchaseOrderDate { get; } = string.Empty;
-        public string MDPIssueDateTime { get; } = string.Empty;
-        public string DocumentRevision { get; } = string.Empty;
-        public string OurReference { get; } = string.Empty;
-        public string BuyerTelephoneNumber { get; } = string.Empty;
-        public string Email { get; } = string.Empty;
+        public string DocumentTitle { get; }
+        public string PurchaseOrderDate { get; }
+        public string MDPIssueDateTime { get; }
+        public string DocumentRevision { get; }
+        public string OurReference { get; }
+        public string BuyerTelephoneNumber { get; }
+        public string Email { get; }
     }
 
     public record MaterialDocumentationPackageIndex
     {   
-        public List<MaterialMasterReport> MaterialMasterReports { get; } = new();
+        public List<MaterialMasterReport> MaterialMasterReports { get; }
 
     }
     public record MaterialMasterReport
     {
-        public string ReportDate{ get; } = string.Empty;
-        public string MaterialNumber { get; } = string.Empty;
-        public string Description { get; } = string.Empty;
-        public string RevisionLevel { get; } = string.Empty;
-        public string Plant { get; } = string.Empty;
-        public string BaseUnitOfMeasure { get; } = string.Empty;
-        public string GrossWeight { get; } = string.Empty;
-        public string NetWeight { get; } = string.Empty;
-        public string BasicMaterial { get; } = string.Empty;
-        public string CommodityCode { get; } = string.Empty;
-        public string ExportControlCode { get; } = string.Empty;
-        public string Manufacturer { get; } = string.Empty;
-        public string ManufacturerPartNumber { get; } = string.Empty;
-        public string MIRID { get; } = string.Empty;
-        public string MIRTitle { get; } = string.Empty;
-        public string MIRDescription { get; } = string.Empty;
-        public string Criticality { get; } = string.Empty;
-        public string TraceabilityType { get; } = string.Empty;
-        public string SerialNumberProfile { get; } = string.Empty;
-        public string ShelfLife { get; } = string.Empty;
-        public string QMControlKey { get; } = string.Empty;
-        public List<InspectionSetup> InspectionSetups { get; } = new List<InspectionSetup>();
-        public List<Classification> Classifications { get; } = new List<Classification>();
-        public List<OtherRelatedDoc> OtherRelatedDocs { get; } = new List<OtherRelatedDoc>();
+        public string ReportDate{ get; }
+        public string MaterialNumber { get; }
+        public string Description { get; }
+        public string RevisionLevel { get; }
+        public string Plant { get; }
+        public string BaseUnitOfMeasure { get; }
+        public string GrossWeight { get; }
+        public string NetWeight { get; }
+        public string BasicMaterial { get; }
+        public string CommodityCode { get; }
+        public string ExportControlCode { get; }
+        public string Manufacturer { get; }
+        public string ManufacturerPartNumber { get; }
+        public string MIRID { get; }
+        public string MIRTitle { get; }
+        public string MIRDescription { get; }
+        public string Criticality { get; }
+        public string TraceabilityType { get; }
+        public string SerialNumberProfile { get; }
+        public string ShelfLife { get; }
+        public string QMControlKey { get; }
+        public List<InspectionSetup> InspectionSetups { get; }
+        public List<Classification> Classifications { get; }
+        public List<OtherRelatedDoc> OtherRelatedDocs { get; }
     }
     public record InspectionSetup
     {
-        public string InspectionSetupItem { get; } = string.Empty;
+        public string InspectionSetupItem { get; }
     }
     public record Classification
     {
-        public string ClassificationItem { get; } = string.Empty;
+        public string ClassificationItem { get; }
     }
     public record OtherRelatedDoc 
     {
-        public string OtherRelatedDocItem { get; } = string.Empty;
+        public string OtherRelatedDocItem { get; }
     }
 
 }
