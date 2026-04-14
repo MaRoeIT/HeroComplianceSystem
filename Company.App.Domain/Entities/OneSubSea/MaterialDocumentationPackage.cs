@@ -10,19 +10,19 @@ namespace Company.App.Domain.Entities.OneSubSea
     {
         public MaterialDocumentationPackageHeader Header { get; }
         public MaterialDocumentationPackageIndex Index { get; }
-        public IReadOnlyList<MaterialMasterReport> MaterialMasterReports { get; }
+        public MaterialMasterReport MaterialMasterReport { get; }
 
         public MaterialDocumentationPackage(
         string orderNumber,
         string orderDate,
         MaterialDocumentationPackageHeader header,
         MaterialDocumentationPackageIndex index,
-        IReadOnlyList<MaterialMasterReport> materialMasterReports
+        MaterialMasterReport materialMasterReport
         ) : base(orderNumber, orderDate)
         {
             Header = header;
             Index = index;
-            MaterialMasterReports = materialMasterReports;
+            MaterialMasterReport = materialMasterReport;
         }
         }
     public record MaterialDocumentationPackageHeader
