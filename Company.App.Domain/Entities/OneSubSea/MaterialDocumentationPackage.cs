@@ -56,11 +56,30 @@ namespace Company.App.Domain.Entities.OneSubSea
 
     public record MaterialDocumentationPackageIndex
     {
-        public MaterialDocumentationPackageIndex()
+        public string Title { get; }
+        public IReadOnlyList<IndexItems> IndexItems { get; }
+
+        public MaterialDocumentationPackageIndex(IReadOnlyList<IndexItems> indexItems)
         {
-
+            IndexItems = indexItems;
         }
+    }
+    public record IndexItems
+    {
+        public string Title { get; }
+        public string PageNumber { get; }
+        public IReadOnlyList<Subsection> SubSections { get; }
 
+    }
+    public record Subsection
+    {
+        public string Title { get; }
+        public string PageNumber { get; }
+        public Subsection(string title, string pageNumber)
+        {
+            Title = title;
+            PageNumber = pageNumber;
+        }
     }
     public record MaterialMasterReport
     {
