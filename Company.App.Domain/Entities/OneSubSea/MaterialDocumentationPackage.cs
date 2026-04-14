@@ -10,14 +10,19 @@ namespace Company.App.Domain.Entities.OneSubSea
     {
         public MaterialDocumentationPackageHeader Header { get; }
         public MaterialDocumentationPackageIndex Index { get; }
+        public IReadOnlyList<MaterialMasterReport> MaterialMasterReports { get; }
 
         public MaterialDocumentationPackage(
         string orderNumber,
         string orderDate,
-        MaterialDocumentationPackageHeader header
+        MaterialDocumentationPackageHeader header,
+        MaterialDocumentationPackageIndex index,
+        IReadOnlyList<MaterialMasterReport> materialMasterReports
         ) : base(orderNumber, orderDate)
         {
             Header = header;
+            Index = index;
+            MaterialMasterReports = materialMasterReports;
         }
         }
     public record MaterialDocumentationPackageHeader
@@ -50,13 +55,12 @@ namespace Company.App.Domain.Entities.OneSubSea
     }
 
     public record MaterialDocumentationPackageIndex
-    {   
-        public IReadOnlyList<MaterialMasterReport> MaterialMasterReports { get; }
-
-        public MaterialDocumentationPackageIndex(IReadOnlyList<MaterialMasterReport> materialMasterReports)
+    {
+        public MaterialDocumentationPackageIndex()
         {
-            MaterialMasterReports = materialMasterReports;
+
         }
+
     }
     public record MaterialMasterReport
     {
