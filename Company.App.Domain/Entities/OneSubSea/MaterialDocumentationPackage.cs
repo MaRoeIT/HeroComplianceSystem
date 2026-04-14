@@ -92,6 +92,7 @@ namespace Company.App.Domain.Entities.OneSubSea
     }
     public record MaterialReport
     {
+        public HashSet<int> PageNumber { get; }
         public string ReportDate{ get; }
         public string MaterialNumber { get; }
         public string Description { get; }
