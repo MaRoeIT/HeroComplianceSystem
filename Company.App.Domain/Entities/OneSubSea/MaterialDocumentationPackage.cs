@@ -11,6 +11,7 @@ namespace Company.App.Domain.Entities.OneSubSea
         public MaterialDocumentationPackageHeader Header { get; }
         public MaterialDocumentationPackageIndex Index { get; }
         public MaterialMasterReport MaterialMasterReport { get; }
+        public RelatedDocuments RelatedDocuments { get; }
 
         public MaterialDocumentationPackage(
         string orderNumber,
@@ -250,4 +251,12 @@ namespace Company.App.Domain.Entities.OneSubSea
             XPlantStatus = xPlantStatus;
         }
     }
+    public record RelatedDocuments
+    {
+        public IReadOnlyList<string> Documents { get; }
+        public RelatedDocuments(IReadOnlyList<string> documents)
+        {
+            Documents = documents;
+        }
+     }
 }
