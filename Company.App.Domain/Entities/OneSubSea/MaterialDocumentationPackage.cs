@@ -1,4 +1,6 @@
-﻿namespace Company.App.Domain.Entities.OneSubSea
+﻿using System.Reflection.PortableExecutable;
+
+namespace Company.App.Domain.Entities.OneSubSea
 {
     /// <summary>
     /// Represents a Material Documentation Package document
@@ -64,5 +66,33 @@
         public IReadOnlyList<string> InspectionSetups { get; }
         public IReadOnlyList<string> Classifications { get; }
         public IReadOnlyList<string> OtherRelatedDocs { get; }
+        public IReadOnlyList<string> BasicDataTexts { get; }
+        public IReadOnlyList<CharacteristicsItem> Characteristics { get; }
+        public BasicDataText MDPBasicDataTexts { get; }
+    }
+
+    public record CharacteristicsItem
+    {
+        public string ConsequenceOfFailure { get; }
+        public string CreatedBy { get; }
+        public string CriticalRating { get; }
+        public string DataAdditional { get; }
+        public string Division { get; }
+        public string InternalDiameter { get; }
+        public string LabDesignOffice { get; }
+        public string Length { get; }
+        public string MIRID { get; }
+        public string Manufacturer { get; }
+        public string ManufacturerPartNumber { get; }
+        public string Material { get; }
+        public string MaterialGroup { get; }
+        public string MatlBasic { get; }
+        public string OutsideDiameter { get; }
+        public string PolymerSealType { get; }
+        public string ProbabilityOfFailure { get; }
+        public string SDRLandQM { get; }
+        public string StandardMaterial { get; }
+        public string TraceabilityCode { get; }
+        public string XPlantStatus { get; }
     }
 }
