@@ -18,4 +18,8 @@ namespace Company.App.Application.Interfaces
     {
         TAddress Map(ExtractedDocumentDto document);
     }
+
+    public interface IVendorAddressMapper : IAddressMapper<Address> { }
+    public interface IInvoiceAddressMapper : IAddressMapper<Address> { }
+
 }

@@ -20,8 +20,8 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
     {
         private readonly ISellerMapper _sellerMapper;
         private readonly IBuyerMapper _buyerMapper;
-        private readonly IAddressMapper<Address> _vendorAddressMapper;
-        private readonly IAddressMapper<Address> _invoiceAddressMapper;
+        private readonly IVendorAddressMapper _vendorAddressMapper;
+        private readonly IInvoiceAddressMapper _invoiceAddressMapper;
         private readonly IAddressMapper<DeliveryAddress> _deliveryAddressMapper;
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
         /// <param name="vendorAddressMapper">The mapper used to map vendor address information. Cannot be null.</param>
         /// <param name="invoiceaddressMapper">The mapper used to map invoice address information. Cannot be null.</param>
         /// <param name="deliveryAddressMapper">The mapper used to map delivery address information. Cannot be null.</param>
-        public MapHeader(ISellerMapper sellerMapper, IBuyerMapper buyerMapper, IAddressMapper<Address> vendorAddressMapper, IAddressMapper<Address> invoiceaddressMapper, IAddressMapper<DeliveryAddress> deliveryAddressMapper)
+        public MapHeader(ISellerMapper sellerMapper, IBuyerMapper buyerMapper, IVendorAddressMapper vendorAddressMapper, IInvoiceAddressMapper invoiceaddressMapper, IAddressMapper<DeliveryAddress> deliveryAddressMapper)
         {
             _sellerMapper = sellerMapper;
             _buyerMapper = buyerMapper;

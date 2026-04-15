@@ -34,13 +34,13 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
 
             var dateCreated = GetValueByLineAndPattern(firstPageLines, "Date Created", 4);
 
-            var currency = GetValueByLineAndPattern(firstPageLines, "Currency", 5, start: "Currency", end: "$");
+            var currency = GetValueAfterLabel(firstPageLines, "Currency");
 
-            var contactPerson = GetValueByLineAndPattern(firstPageLines, "Buyer/Phone", 5, start: "Buyer/Phone", end: "$");
+            var contactPerson = RemoveSymbolsFromString(GetValueAfterLabel(firstPageLines, "Buyer/Phone"));
 
-            var confirmationFax = GetValueByLineAndPattern(firstPageLines, "Confirmation fax", 5, start: "Confirmation fax", end: "$");
+            var confirmationFax = RemoveSymbolsFromString(GetValueAfterLabel(firstPageLines, "Confirmation fax"));
 
-            var frameAgreement = GetValueByLineAndPattern(firstPageLines, "Our Reference", 5, start: "Our Reference", end: "$");
+            var frameAgreement = GetValueAfterLabel(firstPageLines, "Our Reference");
 
             var paymentTerms = GetValueByLineAndPattern(firstPageLines, "Payment terms", 5, start: "Payment terms", end: "$");
 

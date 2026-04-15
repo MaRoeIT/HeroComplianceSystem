@@ -14,7 +14,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
     /// <remarks>This class is intended for use in scenarios where invoice address details need to be parsed
     /// and structured from document extraction results. It implements the IAddressMapper<Address> interface to support
     /// consistent address mapping operations.</remarks>
-    public sealed class MapInvoiceAddress : IAddressMapper<Address>
+    public sealed class MapInvoiceAddress : IInvoiceAddressMapper
     {
         /// <summary>
         /// Extracts and maps address information from the specified extracted document data transfer object.
@@ -30,20 +30,20 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
             var lines = document.Lines;
             var words = document.Words;
             var firstPageLines = GetLinesOnPage(lines, 1);
-            var vendorSection = GetLinesFromTargetLine(firstPageLines, "Invoice Address", 4);
+            var targetSection = GetLinesFromTargetLine(firstPageLines, "Invoice Address", 4);
+            var vendorSection = GetPartOfLinesRelativeToX(words, targetSection, 300, 600);
 
-            var companies = GetCompaniesListedFromLine(vendorSection.FirstOrDefault());
-            var companyName = companies.LastOrDefault();
+            var companyName = vendorSection.First().Text;
 
-            var streetName = RemoveNumbersFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600));
+            var streetName = RemoveNumbersFromString(vendorSection.ElementAt(1).Text);
 
-            var streetNumber = RemoveCharFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(1).FirstOrDefault(), 300, 600));
+            var streetNumber = RemoveCharFromString(vendorSection.ElementAt(1).Text);
 
-            var postalNumber = RemoveCharFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(2).FirstOrDefault(), 300, 450));
+            var postalNumber = GetNthWordInString(vendorSection.ElementAt(2).Text, 1);
 
-            var city = RemoveNumbersFromString(GetPartOfLineRelativeToX(words, vendorSection.Skip(2).FirstOrDefault(), 300, 600), "-");
+            var city = RemoveSymbolsFromString(RemoveNumbersFromString(vendorSection.ElementAt(2).Text));
 
-            var country = GetPartOfLineRelativeToX(words, vendorSection.Skip(3).FirstOrDefault(), 300, 600);
+            var country = vendorSection.ElementAt(3).Text;
 
             return new Address(
                 companyName,

@@ -393,7 +393,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .FirstOrDefault(l =>
                 l.Text.Contains(text, StringComparison.OrdinalIgnoreCase));
         }
-                
+
         /// <summary>
         /// Finds the first word in the collection that matches the specified width, ordered by descending Y coordinate
         /// and then ascending X coordinate.
@@ -508,7 +508,72 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .Where(w => w.X >= start && w.X <= end)
                 .Select(w => w.Text));
         }
-        
+
+        /// <summary>
+        /// Extracts portions of lines containing words whose X coordinates fall within the specified range, grouping
+        /// words into new line segments based on their vertical alignment.
+        /// </summary>
+        /// <remarks>Words are grouped into new lines if their Y coordinate is within the specified
+        /// tolerance of an original line. The resulting line's position and size are calculated based on the included
+        /// words. This method does not modify the input collections.</remarks>
+        /// <param name="wordList">The collection of words to be considered for extraction and grouping into line segments.</param>
+        /// <param name="lines">The collection of original lines used to determine grouping and vertical alignment of words.</param>
+        /// <param name="start">The minimum X coordinate, inclusive, that a word must have to be included in the resulting line segments.</param>
+        /// <param name="end">The maximum X coordinate, inclusive, that a word can have to be included in the resulting line segments.</param>
+        /// <param name="yTolerance">The maximum allowed difference in Y coordinate between a word and a line for the word to be considered part
+        /// of that line. Defaults to 2.0.</param>
+        /// <returns>An enumerable collection of new line segments, each containing the concatenated text and bounding box of
+        /// words within the specified X range. Returns an empty collection if no matching words are found or if input
+        /// collections are null.</returns>
+        public static IEnumerable<ExtractedLineDto> GetPartOfLinesRelativeToX(IEnumerable<ExtractedWordDto> wordList, IEnumerable<ExtractedLineDto> lines, int start, int end, double yTolerance = 2.0)
+        {
+            if (lines == null || wordList == null)
+                return Enumerable.Empty<ExtractedLineDto>();
+
+            var words = GetWordsFromLines(wordList, lines);
+            var newLines = new List<ExtractedLineDto>();
+
+            foreach (var l in lines)
+            {
+                var matchedWords = words
+                    .Where(w =>
+                        Math.Abs(w.Y - l.Y) <= yTolerance &&
+                        w.X >= start &&
+                        w.X <= end)
+                    .OrderBy(w => w.X)
+                    .ToList();
+
+                if (!matchedWords.Any())
+                    continue;
+
+                var firstWord = matchedWords.First();
+                var lastWord = matchedWords.Last();
+
+                var lineStart = firstWord.X;
+                var lineEnd = lastWord.X + lastWord.Width;
+
+                var midY = matchedWords.Average(w => w.Y);
+                var midHeight = matchedWords.Average(w => w.Height);
+
+                var text = string.Join(" ", matchedWords.Select(w => w.Text));
+
+                var newLine = new ExtractedLineDto
+                {
+                    PageNumber = firstWord.PageNumber,
+                    Y = midY,
+                    X = lineStart,
+                    Width = lineEnd - lineStart,
+                    Height = midHeight,
+                    Text = text
+                };
+
+                newLines.Add(newLine);
+            }
+
+            return newLines;
+        }
+
+
         /// <summary>
         /// Retrieves the nth word from the specified input string.
         /// </summary>
@@ -653,27 +718,34 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         /// Removes specific characters from the specified string, optionally ignoring certain characters.
         /// </summary>
         /// <param name="text">The input string from which characters will be removed. Cannot be null.</param>
-        /// <param name="ignore">A string containing characters to ignore during removal. If empty, all target characters are removed.</param>
+        /// <param name="include">A string containing characters to ignore during removal. If empty, all target characters are removed.</param>
         /// <returns>A new string with the specified characters removed, except those specified to be ignored.</returns>
-        public static string RemoveCharFromString(string text, string ignore = "")
+        public static string RemoveCharFromString(string text, string include = "")
         {
-            if (ignore == "")
+            if (include == "")
                 return TrimCharFromString(text);
-            return TrimCharFromString(text, ignore);
+            return TrimCharFromString(text, include);
         }
 
         /// <summary>
         /// Removes all numeric characters from the specified string, with the option to retain certain digits.
         /// </summary>
         /// <param name="text">The input string from which numeric characters will be removed.</param>
-        /// <param name="include">A string containing digits to retain in the result. Digits specified in this parameter will not be removed
+        /// <param name="ignore">A string containing digits to retain in the result. Digits specified in this parameter will not be removed
         /// from the input string. If empty, all digits are removed.</param>
         /// <returns>A new string with numeric characters removed, except for any digits specified in the include parameter.</returns>
-        public static string RemoveNumbersFromString(string text, string include = "")
+        public static string RemoveNumbersFromString(string text, string ignore = "")
         {
-            if (include == "")
+            if (ignore == "")
                 return TrimNumbersFromString(text);
-            return TrimNumbersFromString(text, include);
+            return TrimNumbersFromString(text, ignore);
+        }
+
+        public static string RemoveSymbolsFromString(string text, string ignore = "")
+        {
+            if (ignore == "")
+                return TrimSymbolsFromString(text);
+            return TrimSymbolsFromString(text, ignore);
         }
 
         /// <summary>

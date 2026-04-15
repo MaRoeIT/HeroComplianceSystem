@@ -60,12 +60,24 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
 
             var deliveryDate = GetValueByLabel(contentLines, "Delivery Date:");
 
-            deliveryDate = string.IsNullOrWhiteSpace(deliveryDate)
-                ? string.Empty
-                : deliveryDate
-                    .Replace("Delivery Date:", "")
-                    .Replace(ContextTrimParse(deliveryDate, @" Quantity\:\s*\d\.\d{1,3}"), "")
-                    .Trim();
+            if (!string.IsNullOrWhiteSpace(deliveryDate))
+            {
+                deliveryDate = deliveryDate
+                    .Replace("Delivery Date:", "");
+
+                var toRemove = ContextTrimParse(deliveryDate, @" Quantity\:\s*\d\.\d{1,3}");
+
+                if (!string.IsNullOrEmpty(toRemove))
+                {
+                    deliveryDate = deliveryDate.Replace(toRemove, "");
+                }
+
+                deliveryDate = deliveryDate.Trim();
+            }
+            else
+            {
+                deliveryDate = string.Empty;
+            }
 
             var basicDataTextMapper = new MapBasicDataText();
             var basicDataText = basicDataTextMapper.Map(contentLines);

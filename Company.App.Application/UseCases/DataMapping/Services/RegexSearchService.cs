@@ -1,4 +1,5 @@
 ﻿using Company.App.Application.UseCases.DataMapping.Models;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 
@@ -150,16 +151,16 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         /// <remarks>If the include parameter is null or empty, all numeric characters are removed from
         /// the input string. The comparison is case-sensitive.</remarks>
         /// <param name="text">The input string from which numeric characters will be removed.</param>
-        /// <param name="include">A string containing characters that, when immediately preceding a number, prevent that number from being
+        /// <param name="ignore">A string containing characters that, when immediately preceding a number, prevent that number from being
         /// removed.</param>
         /// <returns>A new string with numeric characters removed, except for those numbers that are immediately preceded by any
         /// character in the include set.</returns>
-        public static string TrimNumbersFromString(string text, string include)
+        public static string TrimNumbersFromString(string text, string ignore)
         {
-            if (string.IsNullOrEmpty(include))
+            if (string.IsNullOrEmpty(ignore))
                 return TrimNumbersFromString(text);
 
-            var escaped = Regex.Escape(include);
+            var escaped = Regex.Escape(ignore);
 
             // Remove numbers NOT preceded by allowed symbols
             var pattern = $@"(?<![{escaped}])\d+";
@@ -176,7 +177,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         public static string TrimCharFromString(string text)
         {
             text = Regex.Replace(text, @"[^\d]+", "").Trim();
-            
+
             return text;
         }
 
@@ -187,20 +188,61 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         /// <remarks>This method uses regular expressions to filter characters. The ignore list is treated
         /// literally; special characters are escaped automatically.</remarks>
         /// <param name="text">The input string to process. May be null or empty.</param>
-        /// <param name="ignore">A string containing characters to preserve in addition to digits. If null or empty, only digits are
+        /// <param name="include">A string containing characters to preserve in addition to digits. If null or empty, only digits are
         /// preserved.</param>
         /// <returns>A new string containing only digits and the specified ignored characters from the input. Returns an empty
         /// string if no such characters are present.</returns>
-        public static string TrimCharFromString(string text, string ignore)
+        public static string TrimCharFromString(string text, string include)
+        {
+            if (string.IsNullOrEmpty(include))
+                return TrimCharFromString(text);
+
+            // Escape special regex characters in ignore string
+            var escapedInclude = Regex.Escape(include);
+
+            // Build pattern: keep digits + included characters
+            var pattern = $@"[^\d{escapedInclude}]+";
+
+            return Regex.Replace(text, pattern, "").Trim();
+        }
+
+        /// <summary>
+        /// Removes common symbol characters from the specified string and trims leading and trailing whitespace.
+        /// </summary>
+        /// <remarks>The method removes characters such as @, £, $, {, [, ], }, ", #, ¤, %, &, /, (, ), =,
+        /// ?, ,, ., ;, :, -, and _ from the input string. The operation is case-insensitive and does not affect
+        /// letters, digits, or other characters.</remarks>
+        /// <param name="text">The input string from which to remove symbol characters. Can be null or empty.</param>
+        /// <returns>A new string with symbol characters removed and whitespace trimmed. Returns an empty string if the input is
+        /// null or contains only symbols and whitespace.</returns>
+        public static string TrimSymbolsFromString(string text)
+        {
+            text = Regex.Replace(text, @"[@£${\[\]}""#¤%&/()=?,.;:\-_]", "").Trim();
+
+            return text;
+        }
+
+        /// <summary>
+        /// Removes numeric symbols from the specified string, except for those that are immediately preceded by any
+        /// character in the ignore list.
+        /// </summary>
+        /// <remarks>This method uses regular expressions to identify and remove numeric symbols. The
+        /// ignore list allows for fine-grained control over which numeric symbols are retained based on their preceding
+        /// character.</remarks>
+        /// <param name="text">The input string from which numeric symbols will be removed.</param>
+        /// <param name="ignore">A string containing characters that, when immediately preceding a numeric symbol, prevent its removal. If
+        /// null or empty, all numeric symbols are removed.</param>
+        /// <returns>A new string with numeric symbols removed, except those preceded by any character in the ignore list.
+        /// Returns the original string if no numeric symbols are found.</returns>
+        public static string TrimSymbolsFromString(string text, string ignore)
         {
             if (string.IsNullOrEmpty(ignore))
                 return TrimCharFromString(text);
 
-            // Escape special regex characters in ignore string
-            var escapedIgnore = Regex.Escape(ignore);
+            var escaped = Regex.Escape(ignore);
 
-            // Build pattern: keep digits + ignored characters
-            var pattern = $@"[^\d{escapedIgnore}]+";
+            // Remove symbols NOT preceded by allowed symbols
+            var pattern = $@"(?<![{escaped}])\d+";
 
             return Regex.Replace(text, pattern, "").Trim();
         }
