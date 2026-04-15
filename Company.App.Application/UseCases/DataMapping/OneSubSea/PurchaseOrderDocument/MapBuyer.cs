@@ -30,7 +30,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
             var lines = document.Lines;
             var firstPageLines = GetLinesOnPage(lines, 1);
 
-            var revisionNumber = GetValueByLineAndPattern(firstPageLines, "Rev No", 1, 1, 3);
+            var revisionNumber = GetValueAfterLabel(firstPageLines, "Rev No");
 
             var dateCreated = GetValueByLineAndPattern(firstPageLines, "Date Created", 4);
 

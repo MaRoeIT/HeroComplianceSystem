@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Interfaces\OneSubSea\MaterialDocumentationPackage\" />
     <Folder Include="UseCases\AddHero\Models\" />
     <Folder Include="UseCases\LookupHeroByName\Models\" />
   </ItemGroup>
