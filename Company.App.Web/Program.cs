@@ -67,8 +67,8 @@ builder.Services.AddScoped<ISellerMapper, MapSeller>(); // :contentReference[oai
 builder.Services.AddScoped<IBuyerMapper, MapBuyer>();   // :contentReference[oaicite:11]{index=11}
 
 // --- Address mappers (GENERIC ⚠️)
-builder.Services.AddScoped<IAddressMapper<Address>, MapVendorAddress>(); // :contentReference[oaicite:12]{index=12}
-builder.Services.AddScoped<IAddressMapper<Address>, MapInvoiceAddress>();
+builder.Services.AddScoped<IVendorAddressMapper, MapVendorAddress>(); // :contentReference[oaicite:12]{index=12}
+builder.Services.AddScoped<IInvoiceAddressMapper, MapInvoiceAddress>();
 builder.Services.AddScoped<IAddressMapper<DeliveryAddress>, MapDeliveryAddress>();
 
 // --- Basic data text mapper ---

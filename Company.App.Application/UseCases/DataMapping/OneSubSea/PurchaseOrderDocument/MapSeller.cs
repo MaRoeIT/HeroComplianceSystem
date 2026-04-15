@@ -36,21 +36,26 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
 
             var vendorNumber = GetValueByLineAndPattern(firstPageLines, "Vendor No", 1, 5, 10);
 
-            var faxNumber = "+" + GetValueByLineAndPattern(firstPageLines, "Vendor Fax No", 1, 9, 15);
+            var faxNumber = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Vendor Fax No").Text, 5);
 
             var email = GetValueByLineAndPattern(firstPageLines, "Vendor email", 3);
 
-            var vendorContact = GetValueByLineAndPattern(firstPageLines, "Vendor Contact", 5, start: "Vendor Contact", end: "Confirmation");
+            //var vendorContact = GetValueByLineAndPattern(firstPageLines, "Vendor Contact", 5, start: "Vendor Contact", end: "Confirmation");
+            var vendorContact = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Vendor Contact").Text, 4);
 
-            var frameAgreement = GetValueByLineAndPattern(firstPageLines, "Your ref", 5, start: "Your ref", end: "Our");
+            //var frameAgreement = GetValueByLineAndPattern(firstPageLines, "Your ref", 5, start: "Your ref", end: "Our");
+            var frameAgreement = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Vendor Contact").Text, 4);
 
-            var incoTerms = GetValueByLineAndPattern(firstPageLines, "Inco Terms", 5, start: "Inco Terms", end: "Payment");
+            //var incoTerms = GetValueByLineAndPattern(firstPageLines, "Inco Terms", 5, start: "Inco Terms", end: "Payment");
+            var incoTerms = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Your ref").Text, 4);
 
-            var incoTermsDescription = GetValueByLineAndPattern(firstPageLines, "Incoterms desc", 5, start: "Incoterms desc", end: "Technical");
+            //var incoTermsDescription = GetValueByLineAndPattern(firstPageLines, "Incoterms desc", 5, start: "Incoterms desc", end: "Technical");
+            var incoTermsDescription = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Incoterms desc").Text, 4);
 
-            var majorMinor = GetValueByLineAndPattern(firstPageLines, "Major/Minor PO", 5, start: "Major/Minor PO", end: "QS");
+            //var majorMinor = GetValueByLineAndPattern(firstPageLines, "Major/Minor PO", 5, start: "Major/Minor PO", end: "QS");
+            var majorMinor = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Major/Minor PO").Text, 4);
 
-            var intercompany = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Intercompany PO").Text, -1);
+            var intercompany = RemoveSymbolsFromString(GetNthWordInString(GetFirstLineContaining(firstPageLines, "Intercompany PO").Text, -1));
 
             return new Seller(
                 purchaseOrderNumber,

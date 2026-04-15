@@ -14,7 +14,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
     /// <remarks>This class is intended for use when extracting and mapping vendor address details from
     /// structured document data, such as OCR or parsed invoice content. It implements the IAddressMapper<Address>
     /// interface to support consistent address mapping operations.</remarks>
-    public sealed class MapVendorAddress : IAddressMapper<Address>
+    public sealed class MapVendorAddress : IVendorAddressMapper
     {
         /// <summary>
         /// Maps the extracted document data to an Address instance by parsing relevant address fields from the provided
