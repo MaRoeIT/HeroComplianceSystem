@@ -14,6 +14,6 @@ namespace Company.App.Application.Interfaces
     /// business rules.</remarks>
     public interface IPurchaseOrderOverheadMapper
     {
-        IReadOnlyList<PurchaseOrderOverhead> Map(ExtractedDocumentDto document);
+        PurchaseOrderOverhead Map(ExtractedDocumentDto document);
     }
 }

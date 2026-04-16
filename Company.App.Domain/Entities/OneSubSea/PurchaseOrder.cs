@@ -11,7 +11,7 @@
 
         // Gets the overhead section content of the purchase order,
         // such as general document sections and free-text blocks.
-        public IReadOnlyList<PurchaseOrderOverhead> Overhead { get; }
+        public PurchaseOrderOverhead Overhead { get; }
 
         // Gets the collection of line items included in the purchase order.
         public IReadOnlyList<PurchaseOrderItem> Items { get; }
@@ -27,7 +27,7 @@
             string orderNumber,
             string orderDate,
             PurchaseOrderHeader header,
-            IReadOnlyList<PurchaseOrderOverhead> overhead,
+            PurchaseOrderOverhead overhead,
             IReadOnlyList<PurchaseOrderItem> items,
             string totalNetValue,
             string totalAmount
@@ -283,9 +283,6 @@
         // Gets the free-text content lines belonging to this section.
         public IReadOnlyList<string> Content { get; }
 
-        // Gets the bullet-point entries belonging to this section.
-        public IReadOnlyList<string> BulletPoints { get; }
-
         // Gets nested subsections contained within this section.
         public IReadOnlyList<PurchaseOrderOverhead> SubSections { get; }
 
@@ -295,15 +292,13 @@
             string sectionNumber,
             string title,
             IReadOnlyList<string> content,
-            IReadOnlyList<string> bulletPoints,
             IReadOnlyList<PurchaseOrderOverhead> subSections)
         {
             PageNumbers = pageNumbers;
-            SectionNumber = sectionNumber;
+            SectionNumber = sectionNumber ?? "";
             Title = title;
-            Content = content;
-            BulletPoints = bulletPoints;
-            SubSections = subSections;
+            Content = content ?? Array.Empty<string>();
+            SubSections = subSections ?? Array.Empty<PurchaseOrderOverhead>();
         }
     }
 
@@ -424,39 +419,4 @@
         }
     }
 
-    /// <summary>
-    /// Represents additional basic data text values associated with a material description.
-    /// </summary>
-    public record BasicDataText
-    {
-        // Gets the delivery requirement expiry date text.
-        public string DeliveryRequirementExpiryDate { get; }
-
-        // Gets the Seal SQ description.
-        public string SealSQDescription { get; }
-
-        // Gets the Seal Engineering part number.
-        public string SealEngineeringPartNumber { get; }
-
-        // Gets the T-seal value.
-        public string TSeal { get; }
-
-        // Gets the anti-extrusion rings value.
-        public string AntiExtrusionRings { get; }
-
-        // Constructor.
-        public BasicDataText(
-            string deliveryRequirementExpiryDate,
-            string sealSQDescription,
-            string sealEngineeringPartNumber,
-            string tSeal,
-            string antiExtrusionRings)
-        {
-            DeliveryRequirementExpiryDate = deliveryRequirementExpiryDate;
-            SealSQDescription = sealSQDescription;
-            SealEngineeringPartNumber = sealEngineeringPartNumber;
-            TSeal = tSeal;
-            AntiExtrusionRings = antiExtrusionRings;
-        }
-    }
 }

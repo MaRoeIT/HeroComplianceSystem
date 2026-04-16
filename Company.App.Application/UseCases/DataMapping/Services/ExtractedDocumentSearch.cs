@@ -232,7 +232,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         /// <returns>An enumerable collection of lines found between the start and end target lines, ordered by page number, Y,
         /// and X coordinates. Returns an empty collection if the start or end target is not found, or if the input
         /// collection is null.</returns>
-        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLineToTargetLine(IEnumerable<ExtractedLineDto> lines, string startTarget, string endTarget, bool includeTargets)
+        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLineToTargetLine(IEnumerable<ExtractedLineDto> lines, string startTarget, string? endTarget, bool includeTargets)
         {
             if (lines == null)
                 return Enumerable.Empty<ExtractedLineDto>();
@@ -243,19 +243,34 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .ThenBy(l => l.X)
                 .ToList();
 
-            var startIndex = result.FindIndex(l => l.Text.Contains(startTarget));
+            var startIndex = result.FindIndex(l =>
+                !string.IsNullOrEmpty(l.Text) &&
+                l.Text.Contains(startTarget));
+
             if (startIndex == -1)
                 return Enumerable.Empty<ExtractedLineDto>();
 
-            var endIndex = result
-                .Skip(startIndex + 1)
-                .Select((line, index) => new { line, index })
-                .FirstOrDefault(x => x.line.Text.Contains(endTarget));
+            int realEndIndex;
 
-            if (endIndex == null)
-                return Enumerable.Empty<ExtractedLineDto>();
+            if (string.IsNullOrEmpty(endTarget))
+            {
+                // No next target -> take everything to the end
+                realEndIndex = result.Count - 1;
+            }
+            else
+            {
+                var endMatch = result
+                    .Skip(startIndex + 1)
+                    .Select((line, index) => new { line, index })
+                    .FirstOrDefault(x =>
+                        !string.IsNullOrEmpty(x.line.Text) &&
+                        x.line.Text.Contains(endTarget));
 
-            int realEndIndex = startIndex + 1 + endIndex.index;
+                if (endMatch == null)
+                    return Enumerable.Empty<ExtractedLineDto>();
+
+                realEndIndex = startIndex + 1 + endMatch.index;
+            }
 
             int from = includeTargets ? startIndex : startIndex + 1;
             int to = includeTargets ? realEndIndex : realEndIndex - 1;
@@ -715,6 +730,27 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         }
 
         /// <summary>
+        /// Searches the provided lines for the first value that matches the specified pattern and optional constraints.
+        /// </summary>
+        /// <param name="lines">The collection of lines to search for a matching value. Cannot be null.</param>
+        /// <param name="pattern">The pattern identifier used to extract the value from each line.</param>
+        /// <param name="minLength">The minimum length, in characters, that a matching value must have. If null, no minimum length is enforced.</param>
+        /// <param name="maxLength">The maximum length, in characters, that a matching value can have. If null, no maximum length is enforced.</param>
+        /// <param name="start">An optional string that the matching value must start with. If null, no start constraint is applied.</param>
+        /// <param name="end">An optional string that the matching value must end with. If null, no end constraint is applied.</param>
+        /// <returns>The first value from the lines that matches the specified pattern and constraints; otherwise, an empty
+        /// string if no match is found or if the input is null.</returns>
+        public static string GetFirstValueByPatternFromLines(IEnumerable<ExtractedLineDto> lines, int pattern, int? minLength = null, int? maxLength = null, string? start = null, string? end = null)
+        {
+            if (lines == null)
+                return string.Empty;
+
+            return lines
+                .Select(l => GetValueByPattern(pattern, l.Text, minLength, maxLength, start, end))
+                .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v))
+                ?? string.Empty;
+        }
+        /// <summary>
         /// Removes specific characters from the specified string, optionally ignoring certain characters.
         /// </summary>
         /// <param name="text">The input string from which characters will be removed. Cannot be null.</param>
@@ -926,95 +962,6 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Separates the provided lines into content lines and bullet point lines, excluding the first line.
-        /// </summary>
-        /// <param name="blockLines">The list of lines to process. The first line is ignored; subsequent lines are classified as either content
-        /// or bullet points based on their format. Cannot be null.</param>
-        /// <returns>A tuple containing two lists: the first list includes content lines, and the second list includes bullet
-        /// point lines. Both lists may be empty if no matching lines are found.</returns>
-        private static (List<string> Content, List<string> BulletPoints) SplitContentAndBullets(List<ExtractedLineDto> blockLines)
-        {
-            var content = new List<string>();
-            var bulletPoints = new List<string>();
-
-            foreach (var line in blockLines.Skip(1))
-            {
-                var text = line.Text?.Trim();
-
-                if (string.IsNullOrWhiteSpace(text))
-                    continue;
-
-                if (IsBullet(text))
-                    bulletPoints.Add(text);
-                else
-                    content.Add(text);
-            }
-
-            return (content, bulletPoints);
-        }
-
-        /// <summary>
-        /// Determines whether the specified child section is a direct child of the given parent section.
-        /// </summary>
-        /// <remarks>A direct child is defined as a section whose name starts with the parent section
-        /// followed by a dot, and has exactly one additional hierarchical level.</remarks>
-        /// <param name="parentSection">The name of the parent section, using dot notation to indicate hierarchy. Cannot be null.</param>
-        /// <param name="childSection">The name of the child section to evaluate, using dot notation to indicate hierarchy. Cannot be null.</param>
-        /// <returns>true if the child section is a direct child of the parent section; otherwise, false.</returns>
-        private static bool IsDirectChild(string parentSection, string childSection)
-        {
-            if (!childSection.StartsWith(parentSection + "."))
-                return false;
-
-            int parentLevel = parentSection.Count(c => c == '.') + 1;
-            int childLevel = childSection.Count(c => c == '.') + 1;
-
-            return childLevel == parentLevel + 1;
-        }
-
-        /// <summary>
-        /// Builds a hierarchical representation of a purchase order overhead section, including its content, bullet
-        /// points, and any nested subsections.
-        /// </summary>
-        /// <remarks>This method recursively processes the provided section blocks to construct a tree
-        /// structure reflecting the document's hierarchy. Only direct child sections of the current section are
-        /// included as subsections.</remarks>
-        /// <param name="current">The section block representing the current section to process. Cannot be null.</param>
-        /// <param name="allBlocks">A list of all section blocks available for constructing the hierarchy. Cannot be null and must contain the
-        /// current section.</param>
-        /// <returns>A PurchaseOrderOverhead object representing the current section and its nested subsections, with associated
-        /// content and bullet points.</returns>
-        private static PurchaseOrderOverhead BuildPurchaseOrderOverhead(SectionBlockDto current, List<SectionBlockDto> allBlocks)
-        {
-            var childBlocks = allBlocks
-                .Where(b => IsDirectChild(current.Section.SectionNumber, b.Section.SectionNumber))
-                .ToList();
-
-            var subSections = childBlocks
-                .Select(child => BuildPurchaseOrderOverhead(child, allBlocks))
-                .ToList();
-
-            var ownBodyLines = current.BlockLines
-                .Skip(1) // skip heading line
-                .Where(line =>
-                {
-                    var parsed = TryParseSectionFromLine(line.Text);
-                    return parsed == null || parsed.Level <= current.Section.Level;
-                })
-                .ToList();
-
-            var split = SplitContentAndBullets(ownBodyLines.Prepend(current.BlockLines.First()).ToList());
-
-            return new PurchaseOrderOverhead(
-                current.BlockLines.Select(l => l.PageNumber).Distinct().ToHashSet(),
-                current.Section.SectionNumber,
-                current.Section.Title,
-                split.Content,
-                split.BulletPoints,
-                subSections);
         }
     }
 }
