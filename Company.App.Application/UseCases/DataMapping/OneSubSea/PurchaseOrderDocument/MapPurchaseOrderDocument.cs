@@ -56,14 +56,13 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
 
             var items = _itemMapper.Map(document);
 
-            int pageNumbers = GetNumbersofPagesInFile(lines);
-            var netAndTotalPage = GetLinesOnPage(lines, pageNumbers - 1);
+            var netAndTotalPage = GetPagesByLineContent(lines, ["Net Value", "Total Amount"]);
 
-            var linesNet = GetLinesFromTargetLine(netAndTotalPage, "Net Value", 2);
-            var totalNetValue = GetValueByLineAndPattern(linesNet, "Net Value", 2);
+            var linesNet = GetLinesFromTargetLine(netAndTotalPage, "Net Value", 1, true);
+            var totalNetValue = GetFirstValueByPatternFromLines(linesNet, 2);
 
-            var linesTotal = GetLinesFromTargetLine(netAndTotalPage, "Total Amount", 2);
-            var totalAmount = GetValueByLineAndPattern(linesTotal, "Total Amount", 2);
+            var linesTotal = GetLinesFromTargetLine(netAndTotalPage, "Total Amount", 1, true);
+            var totalAmount = GetFirstValueByPatternFromLines(linesTotal, 2);
 
             return new PurchaseOrder(
                 orderNumber,
