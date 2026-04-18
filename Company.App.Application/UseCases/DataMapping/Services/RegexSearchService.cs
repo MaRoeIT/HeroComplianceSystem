@@ -27,7 +27,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             GetNumericValueInStringByLength = 1,
             GetPriceFormatValueInString = 2,
             GetEmailValueInString = 3,
-            GetDateValueByDDdotMMdotYYYYByPage = 4,
+            GetDateValueByString = 4,
             GetStringValueInLineBetweenValuesContainingColon = 5,
 
         }
@@ -89,18 +89,26 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         }
 
         /// <summary>
-        /// Extracts the first date in the format "dd.MM.yyyy" from the specified input string.
+        /// Extracts the first date value found in the specified string, if any, using common date formats.
         /// </summary>
-        /// <param name="line">The input string to search for a date in the format "dd.MM.yyyy".</param>
-        /// <returns>A string containing the first date found in the format "dd.MM.yyyy"; or an empty string if no such date is
-        /// present.</returns>
-        public static string GetDateValueByDDdotMMdotYYYYByPage(string line)
+        /// <remarks>The method recognizes several common date formats, including numeric dates with
+        /// separators and dates with month names. If the input is null or empty, the method returns an empty
+        /// string.</remarks>
+        /// <param name="line">The input string to search for a date value. Can be null or empty.</param>
+        /// <returns>A string containing the first date value found in the input, or an empty string if no date is found.</returns>
+        public static string GetDateValueByString(string line)
         {
-            string pattern = @"\d{2}\.\d{2}\.\d{4}";
+            if (string.IsNullOrEmpty(line))
+                return string.Empty;
+
+            string pattern =
+                    @"\b\d{1,4}[./-]\d{1,2}[./-]\d{1,4}\s\d{2}:\d{2}(?::\d{2})?\b" +
+                    @"|\b\d{1,4}[./-]\d{1,2}[./-]\d{1,4}\b" +
+                    @"|\b\d{1,2}[ -][A-Za-z]{3,9}[ -]\d{2,4}\b";
 
             var match = Regex.Match(line, pattern);
 
-            return match.Success ? match.Value : String.Empty;
+            return match.Success ? match.Value : string.Empty;
         }
 
         /// <summary>

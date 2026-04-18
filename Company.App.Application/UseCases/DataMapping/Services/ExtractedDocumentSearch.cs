@@ -3,11 +3,12 @@ using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DataMapping.Models;
 using Company.App.Domain.Entities.OneSubSea;
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
-using static Company.App.Application.UseCases.DataMapping.Services.RegexSearchService;
 using static Company.App.Application.UseCases.DataMapping.Helper.IsBulletLine;
 using static Company.App.Application.UseCases.DataMapping.Helper.IsItemLine;
 using static Company.App.Application.UseCases.DataMapping.Helper.IsPriceFormatValues;
+using static Company.App.Application.UseCases.DataMapping.Services.RegexSearchService;
 
 namespace Company.App.Application.UseCases.DataMapping.Services
 {
@@ -371,22 +372,23 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         }
 
         /// <summary>
-        /// Searches for the first line in the collection whose text contains the specified substring, using a
+        /// Returns the first line from the collection whose text contains the specified substring, using a
         /// case-insensitive comparison.
         /// </summary>
-        /// <param name="lines">The collection of lines to search.</param>
-        /// <param name="text">The substring to search for within each line's text. The search is case-insensitive. If null, empty, or
-        /// whitespace, the method returns null.</param>
-        /// <returns>An instance of ExtractedLineDto representing the first matching line if found; otherwise, null.</returns>
-        public static ExtractedLineDto GetFirstLineContaining(IEnumerable<ExtractedLineDto> lines, string text)
+        /// <param name="lines">The collection of lines to search. Cannot be null.</param>
+        /// <param name="text">The substring to search for within each line's text. Leading and trailing white space are ignored. Cannot be
+        /// null, empty, or consist only of white space.</param>
+        /// <returns>The first line whose text contains the specified substring; or null if no such line is found or if the input
+        /// parameters are invalid.</returns>
+        public static ExtractedLineDto? GetFirstLineContaining(IEnumerable<ExtractedLineDto> lines, string text)
         {
-            if (string.IsNullOrWhiteSpace(text))
+            if (lines == null || string.IsNullOrWhiteSpace(text))
                 return null;
 
             return lines.FirstOrDefault(l =>
-            l.Text.Contains(text, StringComparison.OrdinalIgnoreCase));
+                !string.IsNullOrEmpty(l.Text) &&
+                l.Text.Contains(text, StringComparison.OrdinalIgnoreCase));
         }
-
         /// <summary>
         /// Searches for the first line on a specified page that contains the given text, ordered from top to bottom and
         /// then left to right.
@@ -664,8 +666,8 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 RegexSearchServiceType.GetEmailValueInString
                         => GetEmailValueInString(line),
 
-                RegexSearchServiceType.GetDateValueByDDdotMMdotYYYYByPage
-                        => GetDateValueByDDdotMMdotYYYYByPage(line),
+                RegexSearchServiceType.GetDateValueByString
+                        => GetDateValueByString(line),
 
                 RegexSearchServiceType.GetStringValueInLineBetweenValuesContainingColon
                     when !string.IsNullOrWhiteSpace(start) && !string.IsNullOrWhiteSpace(end)
@@ -902,66 +904,83 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return result;
         }
 
-
         /// <summary>
-        /// Identifies section headings within a collection of extracted lines and groups the lines into section blocks
-        /// based on those headings.
+        /// Parses a date from the specified extracted line using supported date formats.
         /// </summary>
-        /// <remarks>Lines are grouped into sections based on detected headings, which are determined by
-        /// parsing the text of each line. The input lines are ordered by page number, vertical position, and horizontal
-        /// position before processing. This method is typically used to extract structured sections from documents such
-        /// as PDFs.</remarks>
-        /// <param name="lines">The collection of extracted lines to analyze for section headings and content. Cannot be null.</param>
-        /// <returns>An enumerable collection of section blocks, each containing a section heading and its associated lines.
-        /// Returns an empty collection if no section headings are found or if the input is null.</returns>
-        public static IEnumerable<SectionBlockDto> GetSectionBlocksFromLines(IEnumerable<ExtractedLineDto> lines)
+        /// <remarks>The method attempts to parse the date using several common date formats, including
+        /// those with and without time components. If the line does not contain a recognizable date, the method returns
+        /// null.</remarks>
+        /// <param name="line">The extracted line containing the text to parse for a date. Cannot be null.</param>
+        /// <returns>A DateOnly value representing the parsed date if a supported format is found; otherwise, null.</returns>
+        public static DateOnly? ParseDateFromLine(ExtractedLineDto line)
         {
-            if (lines == null)
-                return Enumerable.Empty<SectionBlockDto>();
+            if (line == null)
+                return null;
 
-            var ordered = lines
-                .OrderBy(l => l.PageNumber)
-                .ThenByDescending(l => l.Y)
-                .ThenBy(l => l.X)
-                .ToList();
-
-            var headings = ordered
-                .Select((line, index) => new
+            string[] formats =
                 {
-                    Index = index,
-                    Section = TryParseSectionFromLine(line.Text)
-                })
-                .Where(x => x.Section != null)
-                .Select(x => new
-                {
-                    x.Index,
-                    Section = x.Section!
-                })
-                .ToList();
+                    "dd-MMM-yyyy",
+                    "dd.MM.yyyy",
+                    "yyyy-MM-dd",
+                    "dd/MM/yyyy",
+                    "dd MMM yyyy",
+                    "dd.MM.yyyy HH:mm",
+                    "yyyy-MM-dd HH:mm:ss"
+                };
 
-            if (headings.Count == 0)
-                return Enumerable.Empty<SectionBlockDto>();
+            var date = GetDateValueByString(line.Text);
 
-            var result = new List<SectionBlockDto>();
-
-            for (int i = 0; i < headings.Count; i++)
+            if (date != null)
             {
-                int startIndex = headings[i].Index;
-                int endIndex = (i < headings.Count - 1)
-                    ? headings[i + 1].Index - 1
-                    : ordered.Count - 1;
-
-                var blockLines = ordered
-                    .Skip(startIndex)
-                    .Take(endIndex - startIndex + 1)
-                    .ToList();
-
-                result.Add(new SectionBlockDto(
-                    headings[i].Section,
-                    blockLines));
+                if (DateOnly.TryParseExact(date, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateformat))
+                    return dateformat;
             }
 
-            return result;
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to extract and parse a date from a collection of text lines using multiple date formats.
+        /// </summary>
+        /// <remarks>The method checks each line for a date string and attempts to parse it using several
+        /// common date formats. Only the first valid date encountered is returned.</remarks>
+        /// <param name="lines">The collection of lines to search for a date value. Each line is represented by an ExtractedLineDto
+        /// instance. Cannot be null.</param>
+        /// <returns>A DateOnly value representing the first successfully parsed date found in the lines; otherwise, null if no
+        /// valid date is found or if lines is null.</returns>
+        public static DateOnly? ParseDateFromLines(IEnumerable<ExtractedLineDto> lines)
+        {
+            if (lines == null)
+                return null;
+
+            string[] formats =
+                {
+                    "dd-MMM-yyyy",
+                    "dd.MM.yyyy",
+                    "yyyy-MM-dd",
+                    "dd/MM/yyyy",
+                    "dd MMM yyyy",
+                    "dd.MM.yyyy HH:mm",
+                    "yyyy-MM-dd HH:mm:ss"
+                };
+
+            var dates = new List<string>();
+
+            foreach (var l in lines)
+            {
+                var candidate = GetDateValueByString(l.Text);
+                dates.Add(candidate);
+            }
+
+            if (dates != null)
+            {
+                foreach (var date in dates)
+                {
+                    if (DateOnly.TryParseExact(date, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateformat))
+                        return dateformat;
+                }
+            }
+            return null;
         }
     }
 }

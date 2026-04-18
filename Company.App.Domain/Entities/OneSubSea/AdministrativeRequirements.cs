@@ -28,17 +28,41 @@
 
         public string RevisionNumber { get; }
 
+        public string? Status { get; }
+
         public DateOnly IssueDate { get; }
         
-        public string BusinessSegment { get; }
+        public string? BusinessSegment { get; }
 
-        public string BusinessProcess { get; }
+        public string? BusinessProcess { get; }
 
         public string Owner { get; }
         
         public string Approver { get; }
         
         public string Author { get; }
+
+        public AdministrativeRequirementsHeader(
+            string documentId,
+            string revisionNumber,
+            string? status,
+            DateOnly issuedate,
+            string? businessSegment,
+            string? businessProcess,
+            string owner,
+            string approver,
+            string author)
+        {
+            DocumentId = documentId;
+            RevisionNumber = revisionNumber;
+            Status = status;
+            IssueDate = issuedate;
+            BusinessSegment = businessSegment;
+            BusinessProcess = businessProcess;
+            Owner = owner;
+            Approver = approver;
+            Author = author;
+        }
     }
 
     public record AdministrativeRequirementsOverHead
@@ -80,7 +104,7 @@
             Title = title;
             Pages = pages;
             Content = content;
-            SubSections = subSections;
+            SubSections = subSections ?? Array.Empty<AdministrativeRequirementsSection>();
         }
     }
 }

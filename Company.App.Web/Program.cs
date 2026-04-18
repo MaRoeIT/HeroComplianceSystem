@@ -2,6 +2,7 @@ using Company.App.Application.Interfaces;
 using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataMapping;
 using Company.App.Application.UseCases.DataMapping.OneSubSea;
+using Company.App.Application.UseCases.DataMapping.OneSubSea.AdministrativeRequirements;
 using Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument;
 using Company.App.Domain.Entities.OneSubSea;
 using Company.App.Domain.Specification;
@@ -37,7 +38,7 @@ builder.Services.AddScoped<IDocumentTypeDecider, DocumentTypeDecider>();
 builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();
 builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>();
 builder.Services.AddScoped<IDocumentMapper, MaterialDocumentationPackageDocumentMapper>();
-builder.Services.AddScoped<IDocumentMapper, AdministrativeRequirementsDocumentMapper>();
+builder.Services.AddScoped<IDocumentMapper, MapAdministrativeRequirementsDocument>();
 
 // --- Core services ---
 builder.Services.AddScoped<IPdfDataExtractor, PdfPigDataExtractor>(); // :contentReference[oaicite:0]{index=0}
@@ -54,7 +55,7 @@ builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();       // :con
 // --- Document mappers ---
 builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>(); // :contentReference[oaicite:5]{index=5}
 builder.Services.AddScoped<IDocumentMapper, MaterialDocumentationPackageDocumentMapper>();
-builder.Services.AddScoped<IDocumentMapper, AdministrativeRequirementsDocumentMapper>();
+builder.Services.AddScoped<IDocumentMapper, MapAdministrativeRequirementsDocument>();
 
 // --- Purchase Order specific mappers ---
 builder.Services.AddScoped<IPurchaseOrderHeaderMapper, MapHeader>();     // :contentReference[oaicite:6]{index=6}
