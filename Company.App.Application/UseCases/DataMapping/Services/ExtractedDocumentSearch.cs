@@ -955,13 +955,28 @@ namespace Company.App.Application.UseCases.DataMapping.Services
 
             string[] formats =
                 {
+                    "dd-MM-yyyy",
                     "dd-MMM-yyyy",
                     "dd.MM.yyyy",
-                    "yyyy-MM-dd",
+                    "dd.MMM.yyyy",
                     "dd/MM/yyyy",
+                    "dd/MMM/yyyy",
+                    "yyyy-MM-dd",
+                    "yyyy-MMM-dd",
+                    "yyyy.MM.dd",
+                    "yyyy.MMM.dd",
+                    "yyyy/MM/dd",
+                    "yyyy/MMM/dd",
                     "dd MMM yyyy",
+                    "dd MM yyyy",
                     "dd.MM.yyyy HH:mm",
-                    "yyyy-MM-dd HH:mm:ss"
+                    "dd.MMM.yyyy HH:mm",
+                    "yyyy.MM.yyyy HH:mm",
+                    "yyyy.MMM.yyyy HH:mm",
+                    "yyyy-MM-dd HH:mm:ss",
+                    "yyyy.MM.dd HH:mm:ss",
+                    "yyyy/MM/dd HH:mm:ss",
+                    "yyyy MM dd HH:mm:ss"
                 };
 
             var dates = new List<string>();

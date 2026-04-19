@@ -25,7 +25,7 @@
         // Constructor.
         public PurchaseOrder(
             string orderNumber,
-            string orderDate,
+            DateOnly? orderDate,
             PurchaseOrderHeader header,
             PurchaseOrderOverhead overhead,
             IReadOnlyList<PurchaseOrderItem> items,

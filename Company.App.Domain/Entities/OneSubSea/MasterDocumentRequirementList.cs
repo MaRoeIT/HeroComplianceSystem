@@ -8,7 +8,7 @@
     {
         public MasterDocumentRequirementList(
             string orderNumber,
-            string orderDate
+            DateOnly? orderDate
             ) : base(orderNumber, orderDate) { }
     }
 }

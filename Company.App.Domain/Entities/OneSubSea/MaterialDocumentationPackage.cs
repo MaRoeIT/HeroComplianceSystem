@@ -15,7 +15,7 @@ namespace Company.App.Domain.Entities.OneSubSea
 
         public MaterialDocumentationPackage(
         string orderNumber,
-        string orderDate,
+        DateOnly? orderDate,
         MaterialDocumentationPackageHeader header,
         MaterialDocumentationPackageIndex index,
         MaterialMasterReport materialMasterReport

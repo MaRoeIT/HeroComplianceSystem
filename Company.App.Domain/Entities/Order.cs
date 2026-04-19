@@ -9,10 +9,10 @@
         public string OrderNumber { get; }
 
         // Gets the order date associated with the document.
-        public string OrderDate { get; }
+        public DateOnly? OrderDate { get; }
 
         // Contructor
-        public Order(string orderNumber, string orderDate)
+        public Order(string orderNumber, DateOnly? orderDate)
         {
             OrderNumber = orderNumber;
             OrderDate = orderDate;

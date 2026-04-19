@@ -1,8 +1,8 @@
 using Company.App.Application.Interfaces;
+using Company.App.Application.Interfaces.OneSubSea.AdministrativeRequirements;
 using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataMapping;
 using Company.App.Application.UseCases.DataMapping.OneSubSea;
-using Company.App.Application.UseCases.DataMapping.OneSubSea.AdministrativeRequirements;
 using Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument;
 using Company.App.Domain.Entities.OneSubSea;
 using Company.App.Domain.Specification;
@@ -37,7 +37,7 @@ builder.Services.AddScoped<IsOrderDocumentSpec>();
 builder.Services.AddScoped<IDocumentTypeDecider, DocumentTypeDecider>();
 builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();
 builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>();
-builder.Services.AddScoped<IDocumentMapper, MaterialDocumentationPackageDocumentMapper>();
+builder.Services.AddScoped<IDocumentMapper, MapMaterialDocumentationPackageDocument>();
 builder.Services.AddScoped<IDocumentMapper, MapAdministrativeRequirementsDocument>();
 
 // --- Core services ---
@@ -54,7 +54,7 @@ builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();       // :con
 
 // --- Document mappers ---
 builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>(); // :contentReference[oaicite:5]{index=5}
-builder.Services.AddScoped<IDocumentMapper, MaterialDocumentationPackageDocumentMapper>();
+builder.Services.AddScoped<IDocumentMapper, MapMaterialDocumentationPackageDocument>();
 builder.Services.AddScoped<IDocumentMapper, MapAdministrativeRequirementsDocument>();
 
 // --- Purchase Order specific mappers ---
@@ -62,6 +62,9 @@ builder.Services.AddScoped<IPurchaseOrderHeaderMapper, MapHeader>();     // :con
 builder.Services.AddScoped<IPurchaseOrderOverheadMapper, MapPurchaseOrderOverhead>(); // :contentReference[oaicite:7]{index=7}
 builder.Services.AddScoped<IItemMapper, MapItems>();                                      // :contentReference[oaicite:8]{index=8}
 builder.Services.AddScoped<IMaterialDescriptionMapper, MapMaterialDescription>();         // :contentReference[oaicite:9]{index=9}
+
+// --- Administrative Requirement specific mappers ---
+builder.Services.AddScoped<IAdministrativeRequirementsHeaderMapper, MapAdministrativeRequirementsHeader>();
 
 // --- Party mappers ---
 builder.Services.AddScoped<ISellerMapper, MapSeller>(); // :contentReference[oaicite:10]{index=10}

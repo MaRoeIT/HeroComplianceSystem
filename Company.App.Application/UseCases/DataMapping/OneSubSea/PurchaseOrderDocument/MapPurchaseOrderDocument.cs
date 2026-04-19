@@ -5,6 +5,7 @@ using Company.App.Domain.Entities.OneSubSea;
 using System.Diagnostics.Metrics;
 using static Company.App.Application.UseCases.DataMapping.Services.ExtractedDocumentSearch;
 using static System.Net.WebRequestMethods;
+using PurchaseOrderEntity = Company.App.Domain.Entities.OneSubSea.PurchaseOrder;
 
 namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument
 {
@@ -49,7 +50,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
             var firstPageLines = GetLinesOnPage(lines, 1);
             
             var orderNumber = GetValueByLineAndPattern(firstPageLines, "PO No", 1, 8, 12);
-            var orderDate = GetValueByLineAndPattern(firstPageLines, "Date Created", 4);
+            var orderDate =  ParseDateFromLines(firstPageLines);
             
             var header = _headerMapper.Map(document);
             var overhead = _overheadMapper.Map(document);
@@ -64,7 +65,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
             var linesTotal = GetLinesFromTargetLine(netAndTotalPage, "Total Amount", 1, true);
             var totalAmount = GetFirstValueByPatternFromLines(linesTotal, 2);
 
-            return new PurchaseOrder(
+            return new PurchaseOrderEntity(
                 orderNumber,
                 orderDate,
                 header,

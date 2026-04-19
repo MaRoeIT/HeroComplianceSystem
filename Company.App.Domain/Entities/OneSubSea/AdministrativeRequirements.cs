@@ -4,21 +4,25 @@
     /// Represents an Administrative Requirements document
     /// within the OneSubSea document domain.
     /// </summary>
-    public record AdministrativeRequirements : Order
+    public record AdministrativeRequirements
     {
+        public string DocumentId { get; }
+        public DateOnly IssueDate { get; }
         public AdministrativeRequirementsHeader Header { get; }
 
-        public AdministrativeRequirementsOverHead OverHead { get; }
+        //public IReadOnlyList<AppendicesHeader> Appendices { get; }
 
         public AdministrativeRequirements(
-            AdministrativeRequirementsHeader header,
-            AdministrativeRequirementsOverHead overHead,
-            string orderNumber,
-            string orderDate
-            ) : base(orderNumber, orderDate)
+            string documentId,
+            DateOnly issueDate,
+            AdministrativeRequirementsHeader header
+            //IReadOnlyList<AppendicesHeader> appendices
+            )
         {
+            DocumentId = documentId;
+            IssueDate = issueDate;
             Header = header;
-            OverHead = overHead;
+            //Appendices = appendices;
         }
     }
 
@@ -65,25 +69,28 @@
         }
     }
 
-    public record AdministrativeRequirementsOverHead
+    public record AppendicesHeader : AdministrativeRequirementsHeader
     {
-        public HashSet<int> NumberOfPages { get; }
-
-        public HashSet<int> NumberOfDocuments { get; }
-
-        public IReadOnlyList<string> DocumentList { get; }
-
-        public AdministrativeRequirementsOverHead(
-            HashSet<int> numberOfPages,
-            HashSet<int> numberOfDocuments,
-            IReadOnlyList<string> documentList)
+        public string DocumentTitle { get; }
+        public AppendicesHeader(
+            string documentTitle,
+            string documentId,
+            string revisionNumber,
+            string? status,
+            DateOnly issuedate,
+            string? businessSegment,
+            string? businessProcess,
+            string owner,
+            string approver,
+            string author)
+            : base(documentId, revisionNumber, status, issuedate, businessSegment, businessProcess, owner, approver, author)
         {
-            NumberOfPages = numberOfPages;
-            NumberOfPages = numberOfPages;
-            DocumentList = documentList;
+            DocumentTitle = documentTitle;
         }
     }
 
+    /*
+    // Potential solution for storing section data fro AR objects.
     public record AdministrativeRequirementsSection
     {
         public string Title { get; }
@@ -107,4 +114,5 @@
             SubSections = subSections ?? Array.Empty<AdministrativeRequirementsSection>();
         }
     }
+    */
 }

@@ -8,7 +8,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
     /// Maps extracted Material Documentation Package documents
     /// into a structured payload.
     /// </summary>
-    public class MaterialDocumentationPackageDocumentMapper : IDocumentMapper
+    public class MapMaterialDocumentationPackageDocument : IDocumentMapper
     {
         /// <summary>
         /// Gets the document type supported by this mapper.
