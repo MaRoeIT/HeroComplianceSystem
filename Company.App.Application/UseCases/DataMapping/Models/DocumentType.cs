@@ -20,6 +20,18 @@ namespace Company.App.Application.UseCases.DataMapping.Models
         MaterialDocumentationPackage = 2,
 
         // An administrative requirements document.
-        AdministrativeRequirements = 3
+        AdministrativeRequirements = 3,
+
+        HSSERequirementsForSuppliers = 4,
+
+        SupplierFinalInspectionSpecification = 5,
+
+        SupplierPackingMarkingandShippingInstruction = 6,
+
+        TraceabilitySpecificationForSuppliers = 7,
+
+        SupplierDocumentationSpecification = 8,
+
+        SpecialrequirementForPosreceivedFromBrazil = 9
     }
 }

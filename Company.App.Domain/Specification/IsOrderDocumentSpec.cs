@@ -32,6 +32,21 @@ namespace Company.App.Domain.Specification
         public bool IsAdministrativeRequirements(string documentTitle) =>
             documentTitle.Contains("Administrative Requirements", StringComparison.OrdinalIgnoreCase);
 
+        public bool IsHSSERequirementsForSuppliers(string documentTitle) =>
+            documentTitle.Contains("HSSE Requirements for Suppliers", StringComparison.OrdinalIgnoreCase);
+        public bool IsSupplierFinalInspectionSpecification(string documentTitle) =>
+            documentTitle.Contains("Supplier Final Inspection Specification", StringComparison.OrdinalIgnoreCase);
+        public bool IsSupplierPackingMarkingandShippingInstruction(string documentTitle) =>
+            documentTitle.Contains("Supplier Packing, Marking and", StringComparison.OrdinalIgnoreCase);
+        public bool IsTraceabilitySpecificationForSuppliers(string documentTitle) =>
+            documentTitle.Contains("Traceability Specification for Suppliers", StringComparison.OrdinalIgnoreCase);
+        public bool IsSupplierDocumentationSpecification(string documentTitle) =>
+            documentTitle.Contains("Supplier Documentation Specification", StringComparison.OrdinalIgnoreCase);
+        
+        // SPECIAL CASE NEED OWN PARSE LOGIC
+        //public bool IsSpecialrequirementForPosreceivedFromBrazil(string documentTitle) =>
+        //    documentTitle.Contains("Special requirement for PO’s received from Brazil", StringComparison.OrdinalIgnoreCase);
+
         public bool IsNumeric;
     }
 }

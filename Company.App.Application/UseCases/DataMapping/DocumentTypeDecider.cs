@@ -47,6 +47,21 @@ namespace Company.App.Application.UseCases.DataMapping
 
                 if (_spec.IsAdministrativeRequirements(text))
                     return DocumentType.AdministrativeRequirements;
+
+                if (_spec.IsHSSERequirementsForSuppliers(text))
+                    return DocumentType.HSSERequirementsForSuppliers;
+                
+                if (_spec.IsSupplierFinalInspectionSpecification(text))
+                    return DocumentType.SupplierFinalInspectionSpecification;
+
+                if (_spec.IsSupplierPackingMarkingandShippingInstruction(text))
+                    return DocumentType.SupplierPackingMarkingandShippingInstruction;
+
+                if (_spec.IsTraceabilitySpecificationForSuppliers(text))
+                    return DocumentType.TraceabilitySpecificationForSuppliers;
+
+                if (_spec.IsSupplierDocumentationSpecification(text))
+                    return DocumentType.SupplierDocumentationSpecification;
             }
 
             // Return Unknown when no known document pattern is matched.

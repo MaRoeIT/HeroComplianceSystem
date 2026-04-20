@@ -4,7 +4,6 @@ using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DataMapping.Models;
 using Company.App.Domain.Entities.OneSubSea;
 using static Company.App.Application.UseCases.DataMapping.Services.ExtractedDocumentSearch;
-using AdministrativeRequirementsEntity = Company.App.Domain.Entities.OneSubSea.AdministrativeRequirements;
 
 namespace Company.App.Application.UseCases.DataMapping.OneSubSea
 {
@@ -41,14 +40,17 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
 
             var documentId = GetLinesFromTargetLine(firstPage, "Global SC Procedure", 1).Select(l => l.Text).FirstOrDefault();
 
-            var issueDate = (DateOnly)ParseDateFromLines(GetLinesFromTargetLine(firstPage, "Ver. Status Issue date", 3));
+            var issueDate = ParseDateFromLines(GetLinesFromTargetLine(firstPage, "Ver. Status Issue date", 3));
 
             var header = _administrativeRequirementsHeaderMapper.Map(document);
 
-            return new AdministrativeRequirementsEntity(
+
+            return new AdministrativeRequirements(
                 documentId,
                 issueDate,
-                header);
+                header,
+                Array.Empty<AppendicesHeader>()
+                );
         }
     }
 }

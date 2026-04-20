@@ -912,20 +912,35 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         /// null.</remarks>
         /// <param name="line">The extracted line containing the text to parse for a date. Cannot be null.</param>
         /// <returns>A DateOnly value representing the parsed date if a supported format is found; otherwise, null.</returns>
-        public static DateOnly? ParseDateFromLine(ExtractedLineDto line)
+        public static DateOnly ParseDateFromLine(ExtractedLineDto line)
         {
             if (line == null)
-                return null;
+                throw new ArgumentNullException($"No line in {line}.");
 
             string[] formats =
                 {
+                    "dd-MM-yyyy",
                     "dd-MMM-yyyy",
                     "dd.MM.yyyy",
-                    "yyyy-MM-dd",
+                    "dd.MMM.yyyy",
                     "dd/MM/yyyy",
+                    "dd/MMM/yyyy",
+                    "yyyy-MM-dd",
+                    "yyyy-MMM-dd",
+                    "yyyy.MM.dd",
+                    "yyyy.MMM.dd",
+                    "yyyy/MM/dd",
+                    "yyyy/MMM/dd",
                     "dd MMM yyyy",
+                    "dd MM yyyy",
                     "dd.MM.yyyy HH:mm",
-                    "yyyy-MM-dd HH:mm:ss"
+                    "dd.MMM.yyyy HH:mm",
+                    "yyyy.MM.yyyy HH:mm",
+                    "yyyy.MMM.yyyy HH:mm",
+                    "yyyy-MM-dd HH:mm:ss",
+                    "yyyy.MM.dd HH:mm:ss",
+                    "yyyy/MM/dd HH:mm:ss",
+                    "yyyy MM dd HH:mm:ss"
                 };
 
             var date = GetDateValueByString(line.Text);
@@ -936,7 +951,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                     return dateformat;
             }
 
-            return null;
+            throw new ArgumentException($"Can't parse {date} with any format in {formats}.");
         }
 
         /// <summary>
@@ -952,6 +967,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         {
             if (lines == null)
                 return null;
+                
 
             string[] formats =
                 {
@@ -995,6 +1011,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                         return dateformat;
                 }
             }
+            
             return null;
         }
     }

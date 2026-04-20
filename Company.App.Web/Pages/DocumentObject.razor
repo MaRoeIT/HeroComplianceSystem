@@ -4,6 +4,8 @@
 @using Company.App.Application.Shared
 @using Company.App.Application.UseCases.DataMapping.Models
 @using Microsoft.AspNetCore.Components.Forms
+@using Company.App.Domain.Entities.OneSubSea
+@using Company.App.Application.UseCases.DataMapping.Helper
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
 
@@ -14,19 +16,19 @@
     Document Object
 </MudText>
 <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-6">
-    Upload a PDF and render its mapped document object
+    Upload one or more PDF files and render grouped mapped document objects
 </MudText>
 
 <MudGrid>
     <MudItem xs="12" md="8">
         <MudPaper Elevation="4" Class="pa-6">
-            <MudText Typo="Typo.h6" Class="mb-4">Upload PDF File</MudText>
+            <MudText Typo="Typo.h6" Class="mb-4">Upload PDF Files</MudText>
 
-            <MudFileUpload T="IBrowserFile"
+            <MudFileUpload T="IReadOnlyList<IBrowserFile>"
                            @ref="_fileUpload"
                            Accept=".pdf,application/pdf"
-                           OnFilesChanged="HandleFileSelected"
-                           MaximumFileCount="1">
+                           OnFilesChanged="HandleFilesSelected"
+                           MaximumFileCount="20">
                 <ActivatorContent>
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
@@ -34,7 +36,7 @@
                                OnClick="OpenFilePicker"
                                Size="Size.Large"
                                FullWidth="true">
-                        Select PDF File
+                        Select PDF Files
                     </MudButton>
                 </ActivatorContent>
             </MudFileUpload>
@@ -43,7 +45,7 @@
             {
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-4" />
                 <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">
-                    <em>Mapping PDF into a document object...</em>
+                    <em>Mapping PDF files into document objects...</em>
                 </MudText>
             }
             else if (!string.IsNullOrWhiteSpace(_errorMessage))
@@ -52,30 +54,122 @@
                     @_errorMessage
                 </MudAlert>
             }
-            else if (_mappingResult?.IsSuccess == true && _mappingResult.Value is not null)
+
+            @if (!_isProcessing && _administrativeRequirementsGroup?.Parent is not null)
             {
                 <MudAlert Severity="Severity.Success" Class="mt-4" Elevation="2">
-                    <MudText Typo="Typo.h6">Document mapping completed.</MudText>
+                    <MudText Typo="Typo.h6">Administrative Requirements group</MudText>
                     <MudText Typo="Typo.body2" Class="mt-2">
-                        Document type: <strong>@_mappingResult.Value.DocumentType</strong>
+                        Parent file: <strong>@_administrativeRequirementsGroup.Parent.FileName</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        Appendices found: <strong>@_administrativeRequirementsGroup.Appendices.Count</strong>
                     </MudText>
                 </MudAlert>
 
                 <MudDivider Class="my-4" />
 
-                <MudText Typo="Typo.h6" Class="mb-2">Mapped object values</MudText>
+                <MudText Typo="Typo.h6" Class="mb-2">Administrative Requirements</MudText>
+                <MudPaper Outlined="true" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">
+                        @_administrativeRequirementsGroup.Parent.FileName (@_administrativeRequirementsGroup.Parent.DocumentType)
+                    </MudText>
 
-                @if (_mappedPayload.HasValue)
+                    @if (_administrativeRequirementsGroup.Parent.Payload.HasValue)
+                    {
+                        @RenderJsonNode(_administrativeRequirementsGroup.Parent.FileName, _administrativeRequirementsGroup.Parent.Payload.Value)
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            No mapped payload was returned from the API.
+                        </MudText>
+                    }
+                </MudPaper>
+
+                @if (_administrativeRequirementsGroup.Appendices.Any())
                 {
-                    <MudPaper Outlined="true" Class="pa-4">
-                        @RenderJsonNode("Root", _mappedPayload.Value)
+                    <MudText Typo="Typo.h6" Class="mb-2">Appendices</MudText>
+
+                    @foreach (var appendix in _administrativeRequirementsGroup.Appendices)
+                    {
+                        <MudPaper Outlined="true" Class="pa-4 mb-4">
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">
+                                @appendix.FileName (@appendix.DocumentType)
+                            </MudText>
+
+                            @if (appendix.Payload.HasValue)
+                            {
+                                @RenderJsonNode(appendix.FileName, appendix.Payload.Value)
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    No mapped payload was returned from the API.
+                                </MudText>
+                            }
+                        </MudPaper>
+                    }
+                }
+            }
+            else if (!_isProcessing && _administrativeRequirementsGroup?.Appendices.Any() == true)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mt-4" Elevation="2">
+                    <MudText Typo="Typo.h6">Administrative appendices found without a parent Administrative Requirements document.</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        The appendix files were mapped successfully, but no parent file of type <strong>@DocumentType.AdministrativeRequirements</strong> was uploaded.
+                    </MudText>
+                </MudAlert>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.h6" Class="mb-2">Administrative appendices without parent</MudText>
+
+                @foreach (var appendix in _administrativeRequirementsGroup.Appendices)
+                {
+                    <MudPaper Outlined="true" Class="pa-4 mb-4">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">
+                            @appendix.FileName (@appendix.DocumentType)
+                        </MudText>
+
+                        @if (appendix.Payload.HasValue)
+                        {
+                            @RenderJsonNode(appendix.FileName, appendix.Payload.Value)
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                No mapped payload was returned from the API.
+                            </MudText>
+                        }
                     </MudPaper>
                 }
-                else
+            }
+
+            @if (!_isProcessing && _independentDocuments.Any())
+            {
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.h6" Class="mb-2">Independent documents</MudText>
+
+                @foreach (var document in _independentDocuments)
                 {
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        No mapped payload was returned from the API.
-                    </MudText>
+                    <MudPaper Outlined="true" Class="pa-4 mb-4">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">
+                            @document.FileName (@document.DocumentType)
+                        </MudText>
+
+                        @if (document.Payload.HasValue)
+                        {
+                            @RenderJsonNode(document.FileName, document.Payload.Value)
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                No mapped payload was returned from the API.
+                            </MudText>
+                        }
+                    </MudPaper>
                 }
             }
         </MudPaper>
@@ -89,33 +183,50 @@
             </MudText>
 
             <MudText Typo="Typo.body2" Class="mb-2">
-                1. Select a PDF document
+                1. Select one or more PDF documents
             </MudText>
             <MudText Typo="Typo.body2" Class="mb-2">
-                2. The system identifies the document type
+                2. The system identifies each document type separately
             </MudText>
             <MudText Typo="Typo.body2" Class="mb-2">
-                3. The correct mapper is selected based on the enum
+                3. Administrative appendices are grouped under Administrative Requirements when a parent exists
             </MudText>
             <MudText Typo="Typo.body2">
-                4. The mapped object values are rendered below
+                4. Other mapped document values are rendered as independent results
             </MudText>
 
             <MudDivider Class="my-4" />
 
             <MudText Typo="Typo.caption" Color="Color.Secondary">
-                This page is intended to inspect the structured result after document mapping.
+                This page is intended to inspect the structured result after document mapping and grouping.
             </MudText>
         </MudPaper>
     </MudItem>
 </MudGrid>
 
 @code {
-    private MudFileUpload<IBrowserFile>? _fileUpload;
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+    private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
     private bool _isProcessing;
     private string? _errorMessage;
-    private Result<DocumentMappingResultDto>? _mappingResult;
-    private JsonElement? _mappedPayload;
+    private List<MappedDocumentViewModel> _independentDocuments = new();
+    private AdministrativeRequirementsGroupViewModel? _administrativeRequirementsGroup;
+
+    private sealed class MappedDocumentViewModel
+    {
+        public string FileName { get; set; } = string.Empty;
+        public DocumentType DocumentType { get; set; }
+        public JsonElement? Payload { get; set; }
+    }
+
+    private sealed class AdministrativeRequirementsGroupViewModel
+    {
+        public MappedDocumentViewModel? Parent { get; set; }
+        public List<MappedDocumentViewModel> Appendices { get; set; } = new();
+    }
 
     private async Task OpenFilePicker()
     {
@@ -125,71 +236,132 @@
         }
     }
 
-    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    private async Task HandleFilesSelected(InputFileChangeEventArgs e)
     {
-        var file = e.File;
+        var files = e.GetMultipleFiles(20);
 
         _isProcessing = true;
         _errorMessage = null;
-        _mappingResult = null;
-        _mappedPayload = null;
+        _independentDocuments.Clear();
+        _administrativeRequirementsGroup = new AdministrativeRequirementsGroupViewModel();
+
         StateHasChanged();
 
         try
         {
-            var httpClient = HttpClientFactory.CreateClient("PdfExtractAPI");
-
-            byte[] fileBytes;
-            using (var stream = new MemoryStream())
+            foreach (var file in files)
             {
-                await file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024).CopyToAsync(stream);
-                fileBytes = stream.ToArray();
-            }
+                var mappedDocument = await MapSingleFile(file);
 
-            using var mapContent = new MultipartFormDataContent();
+                if (mappedDocument is null)
+                    continue;
 
-            var mapFileContent = new ByteArrayContent(fileBytes);
-            mapFileContent.Headers.ContentType =
-                new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
-
-            mapContent.Add(mapFileContent, "file", file.Name);
-
-            var mapUrl = new Uri(Navigation.BaseUri + "api/v1/order/mapDocument");
-            var mapResponse = await httpClient.PostAsync(mapUrl, mapContent);
-
-            if (mapResponse.IsSuccessStatusCode)
-            {
-                _mappingResult = await mapResponse.Content.ReadFromJsonAsync<Result<DocumentMappingResultDto>>();
-
-                if (_mappingResult is null)
+                if (mappedDocument.DocumentType == DocumentType.AdministrativeRequirements)
                 {
-                    _errorMessage = "No response content was returned.";
+                    _administrativeRequirementsGroup.Parent = mappedDocument;
                 }
-                else if (!_mappingResult.IsSuccess)
+                else if (IsAdministrativeAppendixType(mappedDocument.DocumentType))
                 {
-                    _errorMessage = _mappingResult.Error ?? "Document mapping failed.";
+                    _administrativeRequirementsGroup.Appendices.Add(mappedDocument);
                 }
-                else if (_mappingResult.Value is not null)
+                else
                 {
-                    if (_mappingResult.Value.MappedPayload is JsonElement json)
-                    {
-                        _mappedPayload = json;
-                    }
+                    _independentDocuments.Add(mappedDocument);
                 }
             }
-            else
+
+            if (_administrativeRequirementsGroup.Parent?.Payload is JsonElement parentJson)
             {
-                var errorContent = await mapResponse.Content.ReadAsStringAsync();
-                _errorMessage = $"Mapping API error: {mapResponse.ReasonPhrase}. {errorContent}";
+                var parent = JsonSerializer.Deserialize<AdministrativeRequirements>(parentJson.GetRawText(), _jsonOptions);
+
+                if (parent is not null)
+                {
+                    var appendices = _administrativeRequirementsGroup.Appendices
+                    .Where(a => a.Payload.HasValue)
+                    .SelectMany(a =>
+                        JsonSerializer.Deserialize<List<AppendicesHeader>>(
+                            a.Payload!.Value.GetRawText(),
+                            _jsonOptions) ?? new List<AppendicesHeader>())
+                    .ToList();;
+
+                    var mergedParent = AdministrativeRequirementsAssembler.AttachAppendices(parent, appendices);
+
+                    _administrativeRequirementsGroup.Parent.Payload =
+                        JsonSerializer.SerializeToElement(mergedParent);
+                }
             }
         }
         catch (Exception ex)
         {
             _errorMessage = $"Error: {ex.Message}";
         }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
 
-        _isProcessing = false;
-        StateHasChanged();
+    private async Task<MappedDocumentViewModel?> MapSingleFile(IBrowserFile file)
+    {
+        var httpClient = HttpClientFactory.CreateClient("PdfExtractAPI");
+
+        byte[] fileBytes;
+        using (var stream = new MemoryStream())
+        {
+            await file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024).CopyToAsync(stream);
+            fileBytes = stream.ToArray();
+        }
+
+        using var mapContent = new MultipartFormDataContent();
+
+        var mapFileContent = new ByteArrayContent(fileBytes);
+        mapFileContent.Headers.ContentType =
+            new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+
+        mapContent.Add(mapFileContent, "file", file.Name);
+
+        var mapUrl = new Uri(Navigation.BaseUri + "api/v1/order/mapDocument");
+        var mapResponse = await httpClient.PostAsync(mapUrl, mapContent);
+
+        if (!mapResponse.IsSuccessStatusCode)
+        {
+            var errorContent = await mapResponse.Content.ReadAsStringAsync();
+            throw new InvalidOperationException(
+                $"Mapping API error for '{file.Name}': {mapResponse.ReasonPhrase}. {errorContent}");
+        }
+
+        var mappingResult = await mapResponse.Content.ReadFromJsonAsync<Result<DocumentMappingResultDto>>();
+
+        if (mappingResult is null)
+            throw new InvalidOperationException($"No response content was returned for '{file.Name}'.");
+
+        if (!mappingResult.IsSuccess || mappingResult.Value is null)
+            throw new InvalidOperationException(
+                $"Document mapping failed for '{file.Name}': {mappingResult.Error ?? "Unknown error."}");
+
+        JsonElement? payload = null;
+
+        if (mappingResult.Value.MappedPayload is JsonElement json)
+            payload = json;
+
+        return new MappedDocumentViewModel
+        {
+            FileName = file.Name,
+            DocumentType = mappingResult.Value.DocumentType,
+            Payload = payload
+        };
+    }
+
+    private static bool IsAdministrativeAppendixType(DocumentType documentType)
+    {
+        return documentType is
+            DocumentType.HSSERequirementsForSuppliers or
+            DocumentType.SupplierFinalInspectionSpecification or
+            DocumentType.SupplierPackingMarkingandShippingInstruction or
+            DocumentType.TraceabilitySpecificationForSuppliers or
+            DocumentType.SupplierDocumentationSpecification or
+            DocumentType.SpecialrequirementForPosreceivedFromBrazil;
     }
 
     private RenderFragment RenderJsonNode(string name, JsonElement element) => builder =>

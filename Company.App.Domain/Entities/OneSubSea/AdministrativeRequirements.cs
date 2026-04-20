@@ -7,22 +7,22 @@
     public record AdministrativeRequirements
     {
         public string DocumentId { get; }
-        public DateOnly IssueDate { get; }
+        public DateOnly? IssueDate { get; }
         public AdministrativeRequirementsHeader Header { get; }
 
-        //public IReadOnlyList<AppendicesHeader> Appendices { get; }
+        public IReadOnlyList<AppendicesHeader>? Appendices { get; }
 
         public AdministrativeRequirements(
             string documentId,
-            DateOnly issueDate,
-            AdministrativeRequirementsHeader header
-            //IReadOnlyList<AppendicesHeader> appendices
+            DateOnly? issueDate,
+            AdministrativeRequirementsHeader header,
+            IReadOnlyList<AppendicesHeader>? appendices
             )
         {
             DocumentId = documentId;
             IssueDate = issueDate;
             Header = header;
-            //Appendices = appendices;
+            Appendices = appendices;
         }
     }
 
@@ -34,7 +34,7 @@
 
         public string? Status { get; }
 
-        public DateOnly IssueDate { get; }
+        public DateOnly? IssueDate { get; }
         
         public string? BusinessSegment { get; }
 
@@ -50,7 +50,7 @@
             string documentId,
             string revisionNumber,
             string? status,
-            DateOnly issuedate,
+            DateOnly? issuedate,
             string? businessSegment,
             string? businessProcess,
             string owner,
@@ -77,7 +77,7 @@
             string documentId,
             string revisionNumber,
             string? status,
-            DateOnly issuedate,
+            DateOnly? issuedate,
             string? businessSegment,
             string? businessProcess,
             string owner,

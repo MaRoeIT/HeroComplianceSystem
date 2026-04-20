@@ -3,6 +3,7 @@ using Company.App.Application.Interfaces.OneSubSea.AdministrativeRequirements;
 using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataMapping;
 using Company.App.Application.UseCases.DataMapping.OneSubSea;
+using Company.App.Application.UseCases.DataMapping.OneSubSea.AdministrativeRequirementsDocument;
 using Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDocument;
 using Company.App.Domain.Entities.OneSubSea;
 using Company.App.Domain.Specification;
@@ -65,6 +66,17 @@ builder.Services.AddScoped<IMaterialDescriptionMapper, MapMaterialDescription>()
 
 // --- Administrative Requirement specific mappers ---
 builder.Services.AddScoped<IAdministrativeRequirementsHeaderMapper, MapAdministrativeRequirementsHeader>();
+builder.Services.AddScoped<IAppendicesHeaderMapperRouter, AppendicesHeaderMapperRouter>();
+
+builder.Services.AddScoped<IAppendicesHeaderMapper, MapAppendicesHeader>();
+builder.Services.AddScoped<IAppendicesHeaderMapperRouter, AppendicesHeaderMapperRouter>();
+
+builder.Services.AddScoped<IDocumentMapper, MapHsseRequirementsForSuppliers>();
+builder.Services.AddScoped<IDocumentMapper, MapSupplierFinalInspectionSpecification>();
+builder.Services.AddScoped<IDocumentMapper, MapSupplierDocumentationSpecification>();
+builder.Services.AddScoped<IDocumentMapper, MapSupplierPackingMarkingandShippingInstruction>();
+builder.Services.AddScoped<IDocumentMapper, MapTraceabilitySpecificationForSuppliers>();
+builder.Services.AddScoped<IDocumentMapper, MapSupplierDocumentationSpecification>();
 
 // --- Party mappers ---
 builder.Services.AddScoped<ISellerMapper, MapSeller>(); // :contentReference[oaicite:10]{index=10}

@@ -56,7 +56,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
                         w.X <= 140)
                         .Select(w => w.Text));
 
-                    var issueDate = (DateOnly)date1;
+                    var issueDate = date1;
 
                     var businessSegment = string.Empty;
 
@@ -102,7 +102,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea
 
                     var status = string.Empty;
 
-                    var issueDate = (DateOnly)date2;
+                    var issueDate = date2;
 
                     var businessSegment = GetValueAfterLabel(headLiners, "Business Segment");
 
