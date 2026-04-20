@@ -62,9 +62,6 @@
                     <MudText Typo="Typo.body2" Class="mt-2">
                         Parent file: <strong>@_administrativeRequirementsGroup.Parent.FileName</strong>
                     </MudText>
-                    <MudText Typo="Typo.body2">
-                        Appendices found: <strong>@_administrativeRequirementsGroup.Appendices.Count</strong>
-                    </MudText>
                 </MudAlert>
 
                 <MudDivider Class="my-4" />
@@ -86,31 +83,6 @@
                         </MudText>
                     }
                 </MudPaper>
-
-                @if (_administrativeRequirementsGroup.Appendices.Any())
-                {
-                    <MudText Typo="Typo.h6" Class="mb-2">Appendices</MudText>
-
-                    @foreach (var appendix in _administrativeRequirementsGroup.Appendices)
-                    {
-                        <MudPaper Outlined="true" Class="pa-4 mb-4">
-                            <MudText Typo="Typo.subtitle1" Class="mb-2">
-                                @appendix.FileName (@appendix.DocumentType)
-                            </MudText>
-
-                            @if (appendix.Payload.HasValue)
-                            {
-                                @RenderJsonNode(appendix.FileName, appendix.Payload.Value)
-                            }
-                            else
-                            {
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                    No mapped payload was returned from the API.
-                                </MudText>
-                            }
-                        </MudPaper>
-                    }
-                }
             }
             else if (!_isProcessing && _administrativeRequirementsGroup?.Appendices.Any() == true)
             {
@@ -209,6 +181,7 @@
     {
         PropertyNameCaseInsensitive = true
     };
+
     private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
     private bool _isProcessing;
     private string? _errorMessage;
@@ -272,22 +245,26 @@
 
             if (_administrativeRequirementsGroup.Parent?.Payload is JsonElement parentJson)
             {
-                var parent = JsonSerializer.Deserialize<AdministrativeRequirements>(parentJson.GetRawText(), _jsonOptions);
+                var parent = JsonSerializer.Deserialize<AdministrativeRequirements>(
+                    parentJson.GetRawText(),
+                    _jsonOptions);
 
                 if (parent is not null)
                 {
                     var appendices = _administrativeRequirementsGroup.Appendices
-                    .Where(a => a.Payload.HasValue)
-                    .SelectMany(a =>
-                        JsonSerializer.Deserialize<List<AppendicesHeader>>(
-                            a.Payload!.Value.GetRawText(),
-                            _jsonOptions) ?? new List<AppendicesHeader>())
-                    .ToList();;
+                        .Where(a => a.Payload.HasValue)
+                        .SelectMany(a =>
+                            JsonSerializer.Deserialize<List<AppendicesHeader>>(
+                                a.Payload!.Value.GetRawText(),
+                                _jsonOptions) ?? new List<AppendicesHeader>())
+                        .ToList();
 
                     var mergedParent = AdministrativeRequirementsAssembler.AttachAppendices(parent, appendices);
 
                     _administrativeRequirementsGroup.Parent.Payload =
-                        JsonSerializer.SerializeToElement(mergedParent);
+                        JsonSerializer.SerializeToElement(mergedParent, _jsonOptions);
+
+                    _administrativeRequirementsGroup.Appendices.Clear();
                 }
             }
         }
