@@ -1,5 +1,6 @@
 using Company.App.Application.Interfaces;
 using Company.App.Application.Interfaces.OneSubSea.AdministrativeRequirements;
+using Company.App.Application.Interfaces.OneSubSea.SharedMappers;
 using Company.App.Application.UseCases.DataExtraction;
 using Company.App.Application.UseCases.DataMapping;
 using Company.App.Application.UseCases.DataMapping.OneSubSea;
@@ -88,7 +89,7 @@ builder.Services.AddScoped<IInvoiceAddressMapper, MapInvoiceAddress>();
 builder.Services.AddScoped<IAddressMapper<DeliveryAddress>, MapDeliveryAddress>();
 
 // --- Basic data text mapper ---
-builder.Services.AddScoped<IBasicDataTextMapper, MapBasicDataText>(); // :contentReference[oaicite:13]{index=13}
+builder.Services.AddScoped<IBasicDataTextMapper, MapPoBasicDataText>(); // :contentReference[oaicite:13]{index=13}
 
 // Routes Document type toward the assigned DocumentType by Enum
 //builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();

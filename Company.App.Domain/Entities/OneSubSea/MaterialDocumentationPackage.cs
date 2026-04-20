@@ -9,96 +9,94 @@ namespace Company.App.Domain.Entities.OneSubSea
     public record MaterialDocumentationPackage : Order
     {
         public MaterialDocumentationPackageHeader Header { get; }
-        public MaterialDocumentationPackageIndex Index { get; }
-        public MaterialMasterReport MaterialMasterReport { get; }
+        public IReadOnlyList<MaterialReport> MaterialReports { get; }
         public RelatedDocuments RelatedDocuments { get; }
 
         public MaterialDocumentationPackage(
         string orderNumber,
         DateOnly? orderDate,
         MaterialDocumentationPackageHeader header,
-        MaterialDocumentationPackageIndex index,
-        MaterialMasterReport materialMasterReport
+        IReadOnlyList<MaterialReport> materialReports
         ) : base(orderNumber, orderDate)
         {
             Header = header;
-            Index = index;
-            MaterialMasterReport = materialMasterReport;
+            MaterialReports = materialReports;
         }
-        }
+    }
+
     public record MaterialDocumentationPackageHeader
     {
-        public string DocumentTitle { get; }
         public string PurchaseOrderDate { get; }
-        public string MDPIssueDateTime { get; }
+        public string MdpIssueDateTime { get; }
         public string DocumentRevision { get; }
         public string OurReference { get; }
-        public string BuyerTelephoneNumber { get; }
+        public string Buyer { get; }
+        public string TelephoneNumber { get; }
         public string Email { get; }
 
         public MaterialDocumentationPackageHeader(
-            string documentTitle,
             string purchaseOrderDate,
             string mdpIssueDateTime,
             string documentRevision,
             string ourReference,
-            string buyerTelephoneNumber,
+            string buyer,
+            string telephoneNumber,
             string email)
         {
-            DocumentTitle = documentTitle;
             PurchaseOrderDate = purchaseOrderDate;
-            MDPIssueDateTime = mdpIssueDateTime;
+            MdpIssueDateTime = mdpIssueDateTime;
             DocumentRevision = documentRevision;
             OurReference = ourReference;
-            BuyerTelephoneNumber = buyerTelephoneNumber;
+            Buyer = buyer;
+            TelephoneNumber = telephoneNumber;
             Email = email;
         }
     }
 
-    public record MaterialDocumentationPackageIndex
-    {
-        public string Title { get; }
-        public IReadOnlyList<IndexItems> IndexItems { get; }
-
-        public MaterialDocumentationPackageIndex(IReadOnlyList<IndexItems> indexItems)
-        {
-            IndexItems = indexItems;
-        }
-    }
-    public record IndexItems
-    {
-        public string Title { get; }
-        public string PageNumber { get; }
-        public IReadOnlyList<Subsection> SubSections { get; }
-
-    }
-    public record Subsection
-    {
-        public string Title { get; }
-        public string PageNumber { get; }
-        public Subsection(string title, string pageNumber)
-        {
-            Title = title;
-            PageNumber = pageNumber;
-        }
-    }
-    public record MaterialMasterReport
-    {
-        public IReadOnlyList<MaterialReport> MaterialReports { get; }
-
-        public MaterialMasterReport(IReadOnlyList<MaterialReport> materialReports)
-        {
-            MaterialReports = materialReports;
-        }
-    }
     public record MaterialReport
     {
+        public MaterialReportHeader Header { get; }
+        public MaterialReportOverHead Overhead { get; }
+        public MaterialReportCharacteristics Characteristics { get; }
+
+        public MaterialReport(
+            MaterialReportHeader header,
+            MaterialReportOverHead overhead,
+            MaterialReportCharacteristics characteristics)
+        {
+            Header = header;
+            Overhead = overhead;
+            Characteristics = characteristics;
+        }
+    }
+
+    public record MaterialReportHeader
+    {
         public HashSet<int> PageNumber { get; }
-        public string ReportDate{ get; }
+        public string ReportDate { get; }
         public string MaterialNumber { get; }
         public string Description { get; }
         public string RevisionLevel { get; }
         public string Plant { get; }
+
+        public MaterialReportHeader(
+            string reportDate,
+            string materialNumber,
+            string description,
+            string revisionLevel,
+            string plant)
+        {
+            ReportDate = reportDate;
+            MaterialNumber = materialNumber;
+            Description = description;
+            RevisionLevel = revisionLevel;
+            Plant = plant;
+        }
+    }
+
+    public record MaterialReportOverHead
+    {
+        
         public string BaseUnitOfMeasure { get; }
         public string GrossWeight { get; }
         public string NetWeight { get; }
@@ -107,9 +105,9 @@ namespace Company.App.Domain.Entities.OneSubSea
         public string ExportControlCode { get; }
         public string Manufacturer { get; }
         public string ManufacturerPartNumber { get; }
-        public string MIRID { get; }
-        public string MIRTitle { get; }
-        public string MIRDescription { get; }
+        public string MirId { get; }
+        public string MirTitle { get; }
+        public string MirDescription { get; }
         public string Criticality { get; }
         public string TraceabilityType { get; }
         public string SerialNumberProfile { get; }
@@ -118,16 +116,9 @@ namespace Company.App.Domain.Entities.OneSubSea
         public IReadOnlyList<string> InspectionSetups { get; }
         public IReadOnlyList<string> Classifications { get; }
         public IReadOnlyList<string> OtherRelatedDocs { get; }
-        public IReadOnlyList<string> BasicDataTexts { get; }
-        public IReadOnlyList<CharacteristicsItem> Characteristics { get; }
-        public BasicDataText MDPBasicDataTexts { get; }
+        public BasicDataText BasicDataText { get; }
 
-        public MaterialReport(
-            string reportDate,
-            string materialNumber,
-            string description,
-            string revisionLevel,
-            string plant,
+        public MaterialReportOverHead(
             string baseUnitOfMeasure,
             string grossWeight,
             string netWeight,
@@ -148,14 +139,8 @@ namespace Company.App.Domain.Entities.OneSubSea
             IReadOnlyList<string> classifications,
             IReadOnlyList<string> otherRelatedDocs,
             IReadOnlyList<string> basicDataTexts,
-            IReadOnlyList<CharacteristicsItem> characteristics,
-            BasicDataText mdpBasicDataTexts)
+            BasicDataText basicDataText)
         {
-            ReportDate = reportDate;
-            MaterialNumber = materialNumber;
-            Description = description;
-            RevisionLevel = revisionLevel;
-            Plant = plant;
             BaseUnitOfMeasure = baseUnitOfMeasure;
             GrossWeight = grossWeight;
             NetWeight = netWeight;
@@ -164,9 +149,9 @@ namespace Company.App.Domain.Entities.OneSubSea
             ExportControlCode = exportControlCode;
             Manufacturer = manufacturer;
             ManufacturerPartNumber = manufacturerPartNumber;
-            MIRID = mirid;
-            MIRTitle = mirTitle;
-            MIRDescription = mirDescription;
+            MirId = mirid;
+            MirTitle = mirTitle;
+            MirDescription = mirDescription;
             Criticality = criticality;
             TraceabilityType = traceabilityType;
             SerialNumberProfile = serialNumberProfile;
@@ -175,13 +160,11 @@ namespace Company.App.Domain.Entities.OneSubSea
             InspectionSetups = inspectionSetups;
             Classifications = classifications;
             OtherRelatedDocs = otherRelatedDocs;
-            BasicDataTexts = basicDataTexts;
-            Characteristics = characteristics;
-            MDPBasicDataTexts = mdpBasicDataTexts;
+            BasicDataText = basicDataText;
         }
     }
 
-    public record CharacteristicsItem
+    public record MaterialReportCharacteristics
     {
         public string ConsequenceOfFailure { get; }
         public string CreatedBy { get; }
@@ -191,7 +174,7 @@ namespace Company.App.Domain.Entities.OneSubSea
         public string InternalDiameter { get; }
         public string LabDesignOffice { get; }
         public string Length { get; }
-        public string MIRID { get; }
+        public string MirId { get; }
         public string Manufacturer { get; }
         public string ManufacturerPartNumber { get; }
         public string Material { get; }
@@ -205,7 +188,7 @@ namespace Company.App.Domain.Entities.OneSubSea
         public string TraceabilityCode { get; }
         public string XPlantStatus { get; }
 
-        public CharacteristicsItem(
+        public MaterialReportCharacteristics(
             string consequenceOfFailure,
             string createdBy,
             string criticalRating,
@@ -236,7 +219,7 @@ namespace Company.App.Domain.Entities.OneSubSea
             InternalDiameter = internalDiameter;
             LabDesignOffice = labDesignOffice;
             Length = length;
-            MIRID = mirid;
+            MirId = mirid;
             Manufacturer = manufacturer;
             ManufacturerPartNumber = manufacturerPartNumber;
             Material = material;
@@ -251,6 +234,7 @@ namespace Company.App.Domain.Entities.OneSubSea
             XPlantStatus = xPlantStatus;
         }
     }
+
     public record RelatedDocuments
     {
         public IReadOnlyList<string> Documents { get; }

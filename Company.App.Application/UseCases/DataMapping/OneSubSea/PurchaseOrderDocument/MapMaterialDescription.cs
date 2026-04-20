@@ -79,7 +79,7 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
                 deliveryDate = string.Empty;
             }
 
-            var basicDataTextMapper = new MapBasicDataText();
+            var basicDataTextMapper = new MapPoBasicDataText();
             var basicDataText = basicDataTextMapper.Map(contentLines);
 
             return new MaterialDescription(

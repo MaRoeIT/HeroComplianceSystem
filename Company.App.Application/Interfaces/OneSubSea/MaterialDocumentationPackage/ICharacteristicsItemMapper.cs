@@ -6,6 +6,6 @@ namespace Company.App.Application.Interfaces
 {
     internal interface ICharacteristicsItemMapper
     {
-        CharacteristicsItem Map(ExtractedDocumentDto document);
+        MaterialReportCharacteristics Map(ExtractedDocumentDto document);
     }
 }
