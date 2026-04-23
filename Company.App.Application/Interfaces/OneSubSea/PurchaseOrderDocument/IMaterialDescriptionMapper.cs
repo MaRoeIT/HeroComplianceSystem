@@ -1,7 +1,7 @@
 ﻿using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Domain.Entities.OneSubSea;
 
-namespace Company.App.Application.Interfaces
+namespace Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument
 {
     /// <summary>
     /// Defines a method that maps extracted document and line data to a material description object.

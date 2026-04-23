@@ -1,4 +1,4 @@
-﻿using Company.App.Application.Interfaces;
+﻿using Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument;
 using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DataMapping.Models;
 using Company.App.Domain.Entities.OneSubSea;
@@ -29,33 +29,39 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
         /// <returns>A Seller object populated with values parsed from the provided document.</returns>
         public Seller Map(ExtractedDocumentDto document)
         {
-            var lines = document.Lines;
-            var firstPageLines = GetLinesOnPage(lines, 1);
+            var words = document.Words;
 
-            var purchaseOrderNumber = GetValueByLineAndPattern(firstPageLines, "PO No", 1, 8, 12);
+            var firstPage = GetLinesOnPage(document.Lines, 1)
+                .Where(l =>
+                    l.Y <= 550 &&
+                    l.Y >= 390);
 
-            var vendorNumber = GetValueByLineAndPattern(firstPageLines, "Vendor No", 1, 5, 10);
+            var sellerSection = GetPartOfLinesRelativeToX(words, firstPage, 0, 300);
 
-            var faxNumber = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Vendor Fax No").Text, 5);
+            var purchaseOrderNumber = GetValueByLineAndPattern(sellerSection, "PO No", 1, 8, 12);
 
-            var email = GetValueByLineAndPattern(firstPageLines, "Vendor email", 3);
+            var vendorNumber = GetValueByLineAndPattern(sellerSection, "Vendor No", 1, 5, 10);
 
-            //var vendorContact = GetValueByLineAndPattern(firstPageLines, "Vendor Contact", 5, start: "Vendor Contact", end: "Confirmation");
-            var vendorContact = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Vendor Contact").Text, 4);
+            var faxNumber = GetValueAfterLabel(sellerSection, "Vendor Fax No");
 
-            //var frameAgreement = GetValueByLineAndPattern(firstPageLines, "Your ref", 5, start: "Your ref", end: "Our");
-            var frameAgreement = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Vendor Contact").Text, 4);
+            var email = GetValueByLineAndPattern(sellerSection, "Vendor email", 3);
 
-            //var incoTerms = GetValueByLineAndPattern(firstPageLines, "Inco Terms", 5, start: "Inco Terms", end: "Payment");
-            var incoTerms = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Your ref").Text, 4);
+            //var vendorContact = GetValueByLineAndPattern(sellerSection, "Vendor Contact", 5, start: "Vendor Contact", end: "Confirmation");
+            var vendorContact = GetValueAfterLabel(sellerSection, "Vendor Contact");
 
-            //var incoTermsDescription = GetValueByLineAndPattern(firstPageLines, "Incoterms desc", 5, start: "Incoterms desc", end: "Technical");
-            var incoTermsDescription = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Incoterms desc").Text, 4);
+            //var frameAgreement = GetValueByLineAndPattern(sellerSection, "Your ref", 5, start: "Your ref", end: "Our");
+            var frameAgreement = GetValueAfterLabel(sellerSection, "Your ref");
 
-            //var majorMinor = GetValueByLineAndPattern(firstPageLines, "Major/Minor PO", 5, start: "Major/Minor PO", end: "QS");
-            var majorMinor = GetNthWordInString(GetFirstLineContaining(firstPageLines, "Major/Minor PO").Text, 4);
+            //var incoTerms = GetValueByLineAndPattern(sellerSection, "Inco Terms", 5, start: "Inco Terms", end: "Payment");
+            var incoTerms = GetValueAfterLabel(sellerSection, "Inco Terms");
 
-            var intercompany = RemoveSymbolsFromString(GetNthWordInString(GetFirstLineContaining(firstPageLines, "Intercompany PO").Text, -1));
+            //var incoTermsDescription = GetValueByLineAndPattern(sellerSection, "Incoterms desc", 5, start: "Incoterms desc", end: "Technical");
+            var incoTermsDescription = GetValueAfterLabel(sellerSection, "Incoterms desc");
+
+            //var majorMinor = GetValueByLineAndPattern(sellerSection, "Major/Minor PO", 5, start: "Major/Minor PO", end: "QS");
+            var majorMinor = GetValueAfterLabel(sellerSection, "Major/Minor PO");
+
+            var intercompany = RemoveSymbolsFromString(GetValueAfterLabel(sellerSection, "Intercompany PO"));
 
             return new Seller(
                 purchaseOrderNumber,

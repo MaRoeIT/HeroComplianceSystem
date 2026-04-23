@@ -1,4 +1,4 @@
-﻿using Company.App.Application.Interfaces;
+﻿using Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument;
 using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Application.UseCases.DataMapping.Models;
 using Company.App.Domain.Entities.OneSubSea;
@@ -28,25 +28,32 @@ namespace Company.App.Application.UseCases.DataMapping.OneSubSea.PurchaseOrderDo
         public Buyer Map(ExtractedDocumentDto document)
         {
             var lines = document.Lines;
-            var firstPageLines = GetLinesOnPage(lines, 1);
+            var words = document.Words;
 
-            var revisionNumber = GetValueAfterLabel(firstPageLines, "Rev No");
+            var firstPage = GetLinesOnPage(lines, 1)
+                .Where(l =>
+                    l.Y <= 550 &&
+                    l.Y >= 390);
 
-            var dateCreated = GetValueByLineAndPattern(firstPageLines, "Date Created", 4);
+            var buyerSection = GetPartOfLinesRelativeToX(words, firstPage, 300, 600);
 
-            var currency = GetValueAfterLabel(firstPageLines, "Currency");
+            var revisionNumber = GetValueAfterLabel(buyerSection, "Rev No");
 
-            var contactPerson = RemoveSymbolsFromString(GetValueAfterLabel(firstPageLines, "Buyer/Phone"));
+            var dateCreated = GetValueByLineAndPattern(buyerSection, "Date Created", 4);
 
-            var confirmationFax = RemoveSymbolsFromString(GetValueAfterLabel(firstPageLines, "Confirmation fax"));
+            var currency = GetValueAfterLabel(buyerSection, "Currency");
 
-            var frameAgreement = GetValueAfterLabel(firstPageLines, "Our Reference");
+            var contactPerson = RemoveSymbolsFromString(GetValueAfterLabel(buyerSection, "Buyer/Phone"));
 
-            var paymentTerms = GetValueByLineAndPattern(firstPageLines, "Payment terms", 5, start: "Payment terms", end: "$");
+            var confirmationFax = RemoveSymbolsFromString(GetValueAfterLabel(buyerSection, "Confirmation fax"));
 
-            var technicalContact = GetValueByLineAndPattern(firstPageLines, "Technical Contact", 5, start: "Technical Contact", end: "$");
+            var frameAgreement = GetValueAfterLabel(buyerSection, "Our Reference");
 
-            var qSResponsible = GetValueByLineAndPattern(firstPageLines, "QS Responsible", 5, start: "QS Responsible", end: "$");
+            var paymentTerms = GetValueByLineAndPattern(buyerSection, "Payment terms", 5, start: "Payment terms", end: "$");
+
+            var technicalContact = GetValueByLineAndPattern(buyerSection, "Technical Contact", 5, start: "Technical Contact", end: "$");
+
+            var qSResponsible = GetValueByLineAndPattern(buyerSection, "QS Responsible", 5, start: "QS Responsible", end: "$");
 
             return new Buyer(
                 revisionNumber,

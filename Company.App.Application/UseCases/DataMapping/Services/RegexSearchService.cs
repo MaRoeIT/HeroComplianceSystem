@@ -250,7 +250,7 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             var escaped = Regex.Escape(ignore);
 
             // Remove symbols NOT preceded by allowed symbols
-            var pattern = $@"(?<![{escaped}])\d+";
+            var pattern = $@"[^\p{{L}}\p{{N}}\s{escaped}]";
 
             return Regex.Replace(text, pattern, "").Trim();
         }
@@ -336,6 +336,12 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             var match = Regex.Match(text, pattern);
 
             return match.Success ? match.Value : string.Empty;
+        }
+
+        public static int GetPageIndex(string text)
+        {
+            var match = Regex.Match(text, @"Page\s+(\d+)\s*/\s*(\d+)");
+            return match.Success ? int.Parse(match.Groups[1].Value) : -1;
         }
     }
 }

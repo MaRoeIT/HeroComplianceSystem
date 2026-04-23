@@ -1,11 +1,13 @@
 ﻿using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Domain.Entities.OneSubSea;
-
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Company.App.Application.Interfaces.OneSubSea.MaterialDocumentationPackage
 {
-    public interface IMaterialReportCharacteristicsMapper
+    public interface IMaterialReportHeaderMapper
     {
-        MaterialReportCharacteristics Map(List<ExtractedLineDto> materialReport);
+        public MaterialReportHeader Map(List<ExtractedLineDto> materialReport);
     }
 }

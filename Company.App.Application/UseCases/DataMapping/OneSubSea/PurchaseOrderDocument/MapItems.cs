@@ -1,4 +1,4 @@
-﻿using Company.App.Application.Interfaces;
+﻿using Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument;
 using Company.App.Application.UseCases.DataExtraction.Models;
 using Company.App.Domain.Entities.OneSubSea;
 using static Company.App.Application.UseCases.DataMapping.Services.ExtractedDocumentSearch;

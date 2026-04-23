@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Company.App.Application.Interfaces
+namespace Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument
 {
     /// <summary>
     /// Defines a method that maps an extracted document data transfer object to a buyer domain model.

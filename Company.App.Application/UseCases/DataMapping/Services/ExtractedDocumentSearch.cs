@@ -218,22 +218,22 @@ namespace Company.App.Application.UseCases.DataMapping.Services
         }
 
         /// <summary>
-        /// Returns a sequence of lines between the first occurrence of a start target string and the first subsequent
-        /// occurrence of an end target string within the provided collection.
+        /// Returns a sequence of lines between the first occurrence of a specified start target and the first
+        /// occurrence of an end target, optionally including the target lines themselves.
         /// </summary>
-        /// <remarks>The method orders the input lines before searching for the target strings. Only the
-        /// first occurrence of each target is considered. If the start target appears after the end target, or if
-        /// either target is not found, the result is empty.</remarks>
-        /// <param name="lines">The collection of lines to search. The lines are expected to contain text and positional information.</param>
-        /// <param name="startTarget">The string to identify the starting line. The search begins at the first line whose text contains this
-        /// value.</param>
-        /// <param name="endTarget">The string to identify the ending line. The search ends at the first line after the start whose text
-        /// contains this value.</param>
-        /// <param name="includeTargets">true to include the lines containing the start and end target strings in the result; otherwise, false.</param>
-        /// <returns>An enumerable collection of lines found between the start and end target lines, ordered by page number, Y,
-        /// and X coordinates. Returns an empty collection if the start or end target is not found, or if the input
-        /// collection is null.</returns>
-        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLineToTargetLine(IEnumerable<ExtractedLineDto> lines, string startTarget, string? endTarget, bool includeTargets)
+        /// <remarks>Lines are ordered by page number, then by descending Y coordinate, and then by X
+        /// coordinate before searching for targets. If the end target is not specified, all lines from the start target
+        /// to the end of the collection are returned. If the start target is not found, an empty collection is
+        /// returned.</remarks>
+        /// <param name="lines">The collection of lines to search. Cannot be null.</param>
+        /// <param name="startTarget">The text to identify the starting line. The first line containing this text marks the beginning of the
+        /// range.</param>
+        /// <param name="endTarget">The text to identify the ending line. The first line containing this text after the start target marks the
+        /// end of the range. If null or empty, all lines to the end of the collection are included.</param>
+        /// <param name="includeTargets">true to include the lines containing the start and end targets in the result; otherwise, false.</param>
+        /// <returns>An enumerable collection of lines between the start and end targets, ordered by page number, Y, and X
+        /// coordinates. Returns an empty collection if the start or end target is not found, or if the input is null.</returns>
+        public static IEnumerable<ExtractedLineDto> GetLinesFromTargetLineToTargetLine(IEnumerable<ExtractedLineDto> lines, string startTarget, string? endTarget, bool includeTargets = false)
         {
             if (lines == null)
                 return Enumerable.Empty<ExtractedLineDto>();
@@ -799,11 +799,140 @@ namespace Company.App.Application.UseCases.DataMapping.Services
                 .FirstOrDefault();
         }
 
+        /// <summary>
+        /// Parses a date from the specified extracted line using supported date formats.
+        /// </summary>
+        /// <remarks>The method attempts to parse the date using several common date formats, including
+        /// those with and without time components. If the line does not contain a recognizable date, the method returns
+        /// null.</remarks>
+        /// <param name="line">The extracted line containing the text to parse for a date. Cannot be null.</param>
+        /// <returns>A DateOnly value representing the parsed date if a supported format is found; otherwise, null.</returns>
+        public static DateOnly ParseDateFromLine(ExtractedLineDto line)
+        {
+            if (line == null)
+                throw new ArgumentNullException($"No line in {line}.");
+
+            string[] formats =
+                {
+                    "dd-MM-yyyy",
+                    "dd-MMM-yyyy",
+                    "dd.MM.yyyy",
+                    "dd.MMM.yyyy",
+                    "dd/MM/yyyy",
+                    "dd/MMM/yyyy",
+                    "yyyy-MM-dd",
+                    "yyyy-MMM-dd",
+                    "yyyy.MM.dd",
+                    "yyyy.MMM.dd",
+                    "yyyy/MM/dd",
+                    "yyyy/MMM/dd",
+                    "dd MMM yyyy",
+                    "dd MM yyyy",
+                    "dd.MM.yyyy HH:mm",
+                    "dd.MMM.yyyy HH:mm",
+                    "yyyy.MM.yyyy HH:mm",
+                    "yyyy.MMM.yyyy HH:mm",
+                    "yyyy-MM-dd HH:mm:ss",
+                    "yyyy.MM.dd HH:mm:ss",
+                    "yyyy/MM/dd HH:mm:ss",
+                    "yyyy MM dd HH:mm:ss",
+                    "yyyy-MM-dd / HH:mm:ss",
+                    "yyyy.MM.dd / HH:mm:ss",
+                    "yyyy/MM/dd / HH:mm:ss",
+                    "yyyy MM dd / HH:mm:ss",
+                    "dd-MM-yyyy / HH:mm:ss",
+                    "dd.MM.yyyy / HH:mm:ss",
+                    "dd/MM/yyyy / HH:mm:ss",
+                    "dd MM yyyy / HH:mm:ss"
+                };
+
+            var date = GetDateValueByString(line.Text);
+
+            if (date != null)
+            {
+                if (DateOnly.TryParseExact(date, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateformat))
+                    return dateformat;
+            }
+
+            throw new ArgumentException($"Can't parse {date} with any format in {formats}.");
+        }
+
+        /// <summary>
+        /// Attempts to extract and parse a date from a collection of text lines using multiple date formats.
+        /// </summary>
+        /// <remarks>The method checks each line for a date string and attempts to parse it using several
+        /// common date formats. Only the first valid date encountered is returned.</remarks>
+        /// <param name="lines">The collection of lines to search for a date value. Each line is represented by an ExtractedLineDto
+        /// instance. Cannot be null.</param>
+        /// <returns>A DateOnly value representing the first successfully parsed date found in the lines; otherwise, null if no
+        /// valid date is found or if lines is null.</returns>
+        public static DateOnly? ParseDateFromLines(IEnumerable<ExtractedLineDto> lines)
+        {
+            if (lines == null)
+                return null;
+
+
+            string[] formats =
+                {
+                    "dd-MM-yyyy",
+                    "dd-MMM-yyyy",
+                    "dd.MM.yyyy",
+                    "dd.MMM.yyyy",
+                    "dd/MM/yyyy",
+                    "dd/MMM/yyyy",
+                    "yyyy-MM-dd",
+                    "yyyy-MMM-dd",
+                    "yyyy.MM.dd",
+                    "yyyy.MMM.dd",
+                    "yyyy/MM/dd",
+                    "yyyy/MMM/dd",
+                    "dd MMM yyyy",
+                    "dd MM yyyy",
+                    "dd.MM.yyyy HH:mm",
+                    "dd.MMM.yyyy HH:mm",
+                    "yyyy.MM.yyyy HH:mm",
+                    "yyyy.MMM.yyyy HH:mm",
+                    "yyyy-MM-dd HH:mm:ss",
+                    "yyyy.MM.dd HH:mm:ss",
+                    "yyyy/MM/dd HH:mm:ss",
+                    "yyyy MM dd HH:mm:ss",
+                    "yyyy-MM-dd / HH:mm:ss",
+                    "yyyy.MM.dd / HH:mm:ss",
+                    "yyyy/MM/dd / HH:mm:ss",
+                    "yyyy MM dd / HH:mm:ss",
+                    "dd-MM-yyyy / HH:mm:ss",
+                    "dd.MM.yyyy / HH:mm:ss",
+                    "dd/MM/yyyy / HH:mm:ss",
+                    "dd MM yyyy / HH:mm:ss"
+                };
+
+            var dates = new List<string>();
+
+            foreach (var l in lines)
+            {
+                var candidate = GetDateValueByString(l.Text);
+                dates.Add(candidate);
+            }
+
+            if (dates != null)
+            {
+                foreach (var date in dates)
+                {
+                    if (DateOnly.TryParseExact(date, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateformat))
+                        return dateformat;
+                }
+            }
+
+            return null;
+        }
+
         //****************************************************
         //************SPECIALISED SOLUTIONS BELOW*************
         //****************************************************
 
-        //************PURCHASE ORDER**************************
+        //****************************************************
+        //******************PURCHASE ORDER********************
+        //****************************************************
 
         /// <summary>
         /// Filters and returns item lines from a collection of extracted lines based on specific criteria related to
@@ -904,115 +1033,49 @@ namespace Company.App.Application.UseCases.DataMapping.Services
             return result;
         }
 
-        /// <summary>
-        /// Parses a date from the specified extracted line using supported date formats.
-        /// </summary>
-        /// <remarks>The method attempts to parse the date using several common date formats, including
-        /// those with and without time components. If the line does not contain a recognizable date, the method returns
-        /// null.</remarks>
-        /// <param name="line">The extracted line containing the text to parse for a date. Cannot be null.</param>
-        /// <returns>A DateOnly value representing the parsed date if a supported format is found; otherwise, null.</returns>
-        public static DateOnly ParseDateFromLine(ExtractedLineDto line)
+        //****************************************************
+        //************Material Documentation Package**********
+        //****************************************************
+
+        public static IEnumerable<List<ExtractedLineDto>> GroupMaterialReportPages(IEnumerable<ExtractedLineDto> lines)
         {
-            if (line == null)
-                throw new ArgumentNullException($"No line in {line}.");
+            var materialReportPages = GetPagesByLineContent(lines, ["Material report"]).OrderBy(l => l.PageNumber).ThenByDescending(l => l.Y);
 
-            string[] formats =
+            int groupId = -1;
+
+            var pageGroups = lines
+                .Where(l =>
+                l.Text.Contains("Page") &&
+                !l.Text.Contains(":"))
+                .OrderBy(l => l.PageNumber)
+                .Select(l => new
                 {
-                    "dd-MM-yyyy",
-                    "dd-MMM-yyyy",
-                    "dd.MM.yyyy",
-                    "dd.MMM.yyyy",
-                    "dd/MM/yyyy",
-                    "dd/MMM/yyyy",
-                    "yyyy-MM-dd",
-                    "yyyy-MMM-dd",
-                    "yyyy.MM.dd",
-                    "yyyy.MMM.dd",
-                    "yyyy/MM/dd",
-                    "yyyy/MMM/dd",
-                    "dd MMM yyyy",
-                    "dd MM yyyy",
-                    "dd.MM.yyyy HH:mm",
-                    "dd.MMM.yyyy HH:mm",
-                    "yyyy.MM.yyyy HH:mm",
-                    "yyyy.MMM.yyyy HH:mm",
-                    "yyyy-MM-dd HH:mm:ss",
-                    "yyyy.MM.dd HH:mm:ss",
-                    "yyyy/MM/dd HH:mm:ss",
-                    "yyyy MM dd HH:mm:ss"
-                };
-
-            var date = GetDateValueByString(line.Text);
-
-            if (date != null)
-            {
-                if (DateOnly.TryParseExact(date, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateformat))
-                    return dateformat;
-            }
-
-            throw new ArgumentException($"Can't parse {date} with any format in {formats}.");
-        }
-
-        /// <summary>
-        /// Attempts to extract and parse a date from a collection of text lines using multiple date formats.
-        /// </summary>
-        /// <remarks>The method checks each line for a date string and attempts to parse it using several
-        /// common date formats. Only the first valid date encountered is returned.</remarks>
-        /// <param name="lines">The collection of lines to search for a date value. Each line is represented by an ExtractedLineDto
-        /// instance. Cannot be null.</param>
-        /// <returns>A DateOnly value representing the first successfully parsed date found in the lines; otherwise, null if no
-        /// valid date is found or if lines is null.</returns>
-        public static DateOnly? ParseDateFromLines(IEnumerable<ExtractedLineDto> lines)
-        {
-            if (lines == null)
-                return null;
-                
-
-            string[] formats =
+                    PageNumber = l.PageNumber,
+                    PageIndex = GetPageIndex(l.Text)
+                })
+                .Select(x =>
                 {
-                    "dd-MM-yyyy",
-                    "dd-MMM-yyyy",
-                    "dd.MM.yyyy",
-                    "dd.MMM.yyyy",
-                    "dd/MM/yyyy",
-                    "dd/MMM/yyyy",
-                    "yyyy-MM-dd",
-                    "yyyy-MMM-dd",
-                    "yyyy.MM.dd",
-                    "yyyy.MMM.dd",
-                    "yyyy/MM/dd",
-                    "yyyy/MMM/dd",
-                    "dd MMM yyyy",
-                    "dd MM yyyy",
-                    "dd.MM.yyyy HH:mm",
-                    "dd.MMM.yyyy HH:mm",
-                    "yyyy.MM.yyyy HH:mm",
-                    "yyyy.MMM.yyyy HH:mm",
-                    "yyyy-MM-dd HH:mm:ss",
-                    "yyyy.MM.dd HH:mm:ss",
-                    "yyyy/MM/dd HH:mm:ss",
-                    "yyyy MM dd HH:mm:ss"
-                };
+                    if (x.PageIndex == 1)
+                        groupId++;
 
-            var dates = new List<string>();
+                    return new
+                    {
+                        x.PageNumber,
+                        Group = groupId
+                    };
+                })
+                .GroupBy(x => x.Group)
+                .Select(g => g.Select(x => x.PageNumber).ToHashSet())
+                .ToList();
 
-            foreach (var l in lines)
-            {
-                var candidate = GetDateValueByString(l.Text);
-                dates.Add(candidate);
-            }
+            var grouped = pageGroups
+                .Select(pageSet => materialReportPages
+                    .Where(l => pageSet.Contains(l.PageNumber))
+                    .OrderBy(l => l.PageNumber)
+                    .ThenByDescending(l => l.Y)
+                    .ToList());
 
-            if (dates != null)
-            {
-                foreach (var date in dates)
-                {
-                    if (DateOnly.TryParseExact(date, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateformat))
-                        return dateformat;
-                }
-            }
-            
-            return null;
+            return grouped;
         }
     }
 }

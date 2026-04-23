@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Company.App.Application.Interfaces
+namespace Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument
 {
     /// <summary>
     /// Defines a method that maps data from an extracted document to a collection of purchase order overhead entities.

@@ -10,7 +10,7 @@ namespace Company.App.Domain.Entities.OneSubSea
     {
         public MaterialDocumentationPackageHeader Header { get; }
         public IReadOnlyList<MaterialReport> MaterialReports { get; }
-        public RelatedDocuments RelatedDocuments { get; }
+        public IReadOnlyList<RelatedDocuments>? RelatedDocuments { get; }
 
         public MaterialDocumentationPackage(
         string orderNumber,
@@ -22,12 +22,24 @@ namespace Company.App.Domain.Entities.OneSubSea
             Header = header;
             MaterialReports = materialReports;
         }
+        public MaterialDocumentationPackage(
+        string orderNumber,
+        DateOnly? orderDate,
+        MaterialDocumentationPackageHeader header,
+        IReadOnlyList<MaterialReport> materialReports,
+        IReadOnlyList<RelatedDocuments> relatedDocuments
+        ) : base(orderNumber, orderDate)
+        {
+            Header = header;
+            MaterialReports = materialReports;
+            RelatedDocuments = relatedDocuments;
+        }
     }
 
     public record MaterialDocumentationPackageHeader
     {
-        public string PurchaseOrderDate { get; }
-        public string MdpIssueDateTime { get; }
+        public DateOnly PurchaseOrderDate { get; }
+        public DateOnly MdpIssueDateTime { get; }
         public string DocumentRevision { get; }
         public string OurReference { get; }
         public string Buyer { get; }
@@ -35,8 +47,8 @@ namespace Company.App.Domain.Entities.OneSubSea
         public string Email { get; }
 
         public MaterialDocumentationPackageHeader(
-            string purchaseOrderDate,
-            string mdpIssueDateTime,
+            DateOnly purchaseOrderDate,
+            DateOnly mdpIssueDateTime,
             string documentRevision,
             string ourReference,
             string buyer,
@@ -56,16 +68,16 @@ namespace Company.App.Domain.Entities.OneSubSea
     public record MaterialReport
     {
         public MaterialReportHeader Header { get; }
-        public MaterialReportOverHead Overhead { get; }
+        public MaterialReportOverHead OverHead { get; }
         public MaterialReportCharacteristics Characteristics { get; }
 
         public MaterialReport(
             MaterialReportHeader header,
-            MaterialReportOverHead overhead,
+            MaterialReportOverHead overHead,
             MaterialReportCharacteristics characteristics)
         {
             Header = header;
-            Overhead = overhead;
+            OverHead = overHead;
             Characteristics = characteristics;
         }
     }
@@ -73,19 +85,21 @@ namespace Company.App.Domain.Entities.OneSubSea
     public record MaterialReportHeader
     {
         public HashSet<int> PageNumber { get; }
-        public string ReportDate { get; }
+        public DateOnly? ReportDate { get; }
         public string MaterialNumber { get; }
         public string Description { get; }
         public string RevisionLevel { get; }
         public string Plant { get; }
 
         public MaterialReportHeader(
-            string reportDate,
+            HashSet<int> pageNumber,
+            DateOnly? reportDate,
             string materialNumber,
             string description,
             string revisionLevel,
             string plant)
         {
+            PageNumber = pageNumber;
             ReportDate = reportDate;
             MaterialNumber = materialNumber;
             Description = description;
@@ -97,22 +111,22 @@ namespace Company.App.Domain.Entities.OneSubSea
     public record MaterialReportOverHead
     {
         
-        public string BaseUnitOfMeasure { get; }
-        public string GrossWeight { get; }
-        public string NetWeight { get; }
-        public string BasicMaterial { get; }
-        public string CommodityCode { get; }
-        public string ExportControlCode { get; }
-        public string Manufacturer { get; }
-        public string ManufacturerPartNumber { get; }
-        public string MirId { get; }
-        public string MirTitle { get; }
-        public string MirDescription { get; }
-        public string Criticality { get; }
-        public string TraceabilityType { get; }
-        public string SerialNumberProfile { get; }
-        public string ShelfLife { get; }
-        public string QMControlKey { get; }
+        public string? BaseUnitOfMeasure { get; }
+        public string? GrossWeight { get; }
+        public string? NetWeight { get; }
+        public string? BasicMaterial { get; }
+        public string? CommodityCode { get; }
+        public string? ExportControlCode { get; }
+        public string? Manufacturer { get; }
+        public string? ManufacturerPartNumber { get; }
+        public string? MirId { get; }
+        public string? MirTitle { get; }
+        public string? MirDescription { get; }
+        public string? Criticality { get; }
+        public string? TraceabilityType { get; }
+        public string? SerialNumberProfile { get; }
+        public string? ShelfLife { get; }
+        public string? QMControlKey { get; }
         public IReadOnlyList<string> InspectionSetups { get; }
         public IReadOnlyList<string> Classifications { get; }
         public IReadOnlyList<string> OtherRelatedDocs { get; }
@@ -138,7 +152,6 @@ namespace Company.App.Domain.Entities.OneSubSea
             IReadOnlyList<string> inspectionSetups,
             IReadOnlyList<string> classifications,
             IReadOnlyList<string> otherRelatedDocs,
-            IReadOnlyList<string> basicDataTexts,
             BasicDataText basicDataText)
         {
             BaseUnitOfMeasure = baseUnitOfMeasure;

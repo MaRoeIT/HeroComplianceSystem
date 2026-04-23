@@ -1,4 +1,5 @@
 using Company.App.Application.Interfaces;
+using Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument;
 using Company.App.Application.Interfaces.OneSubSea.AdministrativeRequirements;
 using Company.App.Application.Interfaces.OneSubSea.SharedMappers;
 using Company.App.Application.UseCases.DataExtraction;
@@ -15,6 +16,8 @@ using Company.App.Web;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using Company.App.Application.UseCases.DataMapping.OneSubSea.MaterialDocumentationPackageDocument;
+using Company.App.Application.Interfaces.OneSubSea.MaterialDocumentationPackage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,9 +41,6 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<IsOrderDocumentSpec>();
 builder.Services.AddScoped<IDocumentTypeDecider, DocumentTypeDecider>();
 builder.Services.AddScoped<IDataMapperRouter, DataMapperRouter>();
-builder.Services.AddScoped<IDocumentMapper, MapPurchaseOrderDocument>();
-builder.Services.AddScoped<IDocumentMapper, MapMaterialDocumentationPackageDocument>();
-builder.Services.AddScoped<IDocumentMapper, MapAdministrativeRequirementsDocument>();
 
 // --- Core services ---
 builder.Services.AddScoped<IPdfDataExtractor, PdfPigDataExtractor>(); // :contentReference[oaicite:0]{index=0}
@@ -64,6 +64,15 @@ builder.Services.AddScoped<IPurchaseOrderHeaderMapper, MapHeader>();     // :con
 builder.Services.AddScoped<IPurchaseOrderOverheadMapper, MapPurchaseOrderOverhead>(); // :contentReference[oaicite:7]{index=7}
 builder.Services.AddScoped<IItemMapper, MapItems>();                                      // :contentReference[oaicite:8]{index=8}
 builder.Services.AddScoped<IMaterialDescriptionMapper, MapMaterialDescription>();         // :contentReference[oaicite:9]{index=9}
+
+// --- Material Documentation Package specific mappers ---
+builder.Services.AddScoped<IMaterialDocumentationPackageHeaderMapper, MapMaterialDocumentationPackageHeader>();
+builder.Services.AddScoped<IMaterialReportMapper, MapMaterialReport>();
+builder.Services.AddScoped<IMaterialReportHeaderMapper, MapMaterialReportHeader>();
+builder.Services.AddScoped<IMaterialReportOverHeadMapper, MapMaterialReportOverHead>();
+builder.Services.AddScoped<IMaterialReportCharacteristicsMapper, MapMaterialReportCharacteristics>();
+builder.Services.AddScoped<IBasicDataTextMapper, MapMdpBasicDataText>();
+
 
 // --- Administrative Requirement specific mappers ---
 builder.Services.AddScoped<IAdministrativeRequirementsHeaderMapper, MapAdministrativeRequirementsHeader>();

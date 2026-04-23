@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Company.App.Application.Interfaces
+namespace Company.App.Application.Interfaces.OneSubSea.PurchaseOrderDocument
 {
     /// <summary>
     /// Defines a contract for mapping an extracted document to an address of a specified type.
